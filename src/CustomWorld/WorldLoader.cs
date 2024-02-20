@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static CustomRegions.CustomWorld.RegionPreprocessors;
 using static CustomRegions.Mod.Structs;
+using static IL.World;
 
 
 namespace CustomRegions.CustomWorld
@@ -197,7 +198,7 @@ namespace CustomRegions.CustomWorld
         {
             foreach (AbstractRoom room in self.abstractRooms)
             {
-                if (room == null) continue;
+                if (room == null || room == self.world.offScreenDen) continue;
                 RainWorld.roomIndexToName[room.index] = room.name;
                 RainWorld.roomNameToIndex[room.name] = room.index;
             }
