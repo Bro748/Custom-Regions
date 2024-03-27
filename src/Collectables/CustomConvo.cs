@@ -59,7 +59,8 @@ namespace CustomRegions.Collectables
                 x => x.MatchLdloc(1),
                 x => x.MatchCall(typeof(File), nameof(File.Exists)),
                 x => x.MatchBrtrue(out _),
-                x => x.MatchLdstr("NOT FOUND ") //lol
+                x => x.MatchLdcI4(1),
+                x => x.MatchNewarr(typeof(string))
                 ))
             {
                 c.Emit(OpCodes.Ldarg_0);

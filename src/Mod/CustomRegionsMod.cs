@@ -21,7 +21,7 @@ namespace CustomRegions.Mod
     {
         public const string PLUGIN_ID = "com.rainworldgame.garrakx.crs.mod";
         public const string PLUGIN_NAME = "Custom Regions Support";
-        public const string PLUGIN_VERSION = "0.10.4.2";
+        public const string PLUGIN_VERSION = "0.10.4.4";
         public const string JSON_ID = "crs";
 
          
@@ -45,7 +45,6 @@ namespace CustomRegions.Mod
             BepLog($"{PLUGIN_NAME} (v{PLUGIN_VERSION}) initialized, applying hooks...");
 
             try {
-                ModPriorities.ApplyHooks();
                 IndexedEntranceClass.Apply();
                 ReplaceRoomPreprocessor.Apply();
                 Debugging.ApplyHooks();
@@ -82,7 +81,6 @@ namespace CustomRegions.Mod
             //cfgEven = oi.config.Bind<bool>("EvenUse", true, new ConfigurableInfo("Whether to use multiple BubbleGrasses evenly or not. Either use all BubbleGrasses in divided speed(true) or use one BubbleGrass at a time(false)."));
             CreateCustomWorldLog();
             LoadDebugLevel();
-            FixThreadedLogging();
             RegionPreprocessors.InitializeBuiltinPreprocessors();
             CustomLog("Mod is Initialized.");
         }
@@ -121,18 +119,6 @@ namespace CustomRegions.Mod
             get => PLUGIN_VERSION;
         }
 
-        private static void FixThreadedLogging()
-        {
-            if (Custom.rainWorld != null)
-            {
-                RainWorld rw = Custom.rainWorld;
-                Application.logMessageReceived -= rw.HandleLog;
-                Application.logMessageReceivedThreaded -= rw.HandleLog; //just in case is already subscribed
-                Application.logMessageReceivedThreaded += rw.HandleLog;
-            }
-            else { CustomLog("failed to fix threaded logging as Custom.rainWorld is still null", false, DebugLevel.FULL); }
-        }
-
         public static void CustomLog(string logText)
         {
             if (!File.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + logFileName)) {
@@ -146,7 +132,7 @@ namespace CustomRegions.Mod
                     file.WriteLine(logText);
                 }
             } catch (Exception e) {
-                Debug.LogError(e);
+                Debug.LogError(e.ToString());
             }
         }
 

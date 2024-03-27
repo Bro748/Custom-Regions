@@ -83,18 +83,23 @@ namespace CustomRegions.Arena
         {
             var c = new ILCursor(il);
 
+            Mono.Cecil.FieldReference field = null!;
             if (c.TryGotoNext(MoveType.After,
-                x => x.MatchLdloc(1),
+                x => x.MatchLdfld(out field) && field.Name == "fileName",
                 x => x.MatchNewobj<List<List<SlugcatStats.Name>>>(),
                 x => x.MatchCallvirt(typeof(Dictionary<string, List<List<SlugcatStats.Name>>>).GetMethod("set_Item"))
                 ))
             {
                 c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc, 1);
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldfld, field);
                 c.EmitDelegate((RainWorld self, string region) =>
                 {
-                    self.regionPurpleTokens()[region] = new();
-                    self.regionPurpleTokensAccessibility()[region] = new();
+                    try
+                    {
+                        self.regionPurpleTokens()[region] = new();
+                        self.regionPurpleTokensAccessibility()[region] = new();
+                    } catch (Exception e) { CustomRegionsMod.CustomLog($"adding region {region} to purple tokencache broke!\n" + e, true); }
                 });
             }
             else
@@ -115,21 +120,25 @@ namespace CustomRegions.Arena
                 c.Emit(OpCodes.Ldloc, num);
                 c.EmitDelegate((RainWorld self, string region, List<SlugcatStats.Name> slugcats, PlacedObject placedObject) => 
                 {
-                    if (placedObject.type != ChallengeToken.PurpleToken || !ExtEnum<ChallengeData.ChallengeUnlockID>.values.entries.Contains((placedObject.data as CollectToken.CollectTokenData).tokenString))
-                        return;
+                    try
+                    {
+                        if (!self.regionPurpleTokens().ContainsKey(region) || placedObject.type != ChallengeToken.PurpleToken || !ExtEnum<ChallengeData.ChallengeUnlockID>.values.entries.Contains((placedObject.data as CollectToken.CollectTokenData).tokenString))
+                            return;
 
-                    var collectTokenData = (placedObject.data as CollectToken.CollectTokenData);
-                    var item = new ChallengeData.ChallengeUnlockID(collectTokenData.tokenString, false);
-                    if (!self.regionPurpleTokens()[region].Contains(item))
-                    {
-                        self.regionPurpleTokens()[region].Add(item);
-                        self.regionPurpleTokensAccessibility()[region].Add(self.FilterTokenClearance(collectTokenData.availableToPlayers, /*oldData*/ new(), slugcats));
+                        var collectTokenData = (placedObject.data as CollectToken.CollectTokenData);
+                        var item = new ChallengeData.ChallengeUnlockID(collectTokenData.tokenString, false);
+                        if (!self.regionPurpleTokens()[region].Contains(item))
+                        {
+                            self.regionPurpleTokens()[region].Add(item);
+                            self.regionPurpleTokensAccessibility()[region].Add(self.FilterTokenClearance(collectTokenData.availableToPlayers, /*oldData*/ new(), slugcats));
+                        }
+                        else
+                        {
+                            int index = self.regionPurpleTokens()[region].IndexOf(item);
+                            self.regionPurpleTokensAccessibility()[region][index] = self.FilterTokenClearance(collectTokenData.availableToPlayers, self.regionPurpleTokensAccessibility()[region][index], slugcats);
+                        }
                     }
-                    else
-                    {
-                        int index = self.regionPurpleTokens()[region].IndexOf(item);
-                        self.regionPurpleTokensAccessibility()[region][index] = self.FilterTokenClearance(collectTokenData.availableToPlayers, self.regionPurpleTokensAccessibility()[region][index], slugcats);
-                    }
+                    catch (Exception e) { CustomRegionsMod.CustomLog($"failed to register PurpleToken for region {region}!\n" + e, true); }
                 });
             }
 
@@ -149,17 +158,21 @@ namespace CustomRegions.Arena
                 c.Emit(OpCodes.Ldloc, 5);
                 c.EmitDelegate((RainWorld self, string region, string text) => 
                 {
-                    if (self.regionPurpleTokens()[region].Count == 0) return text;
-                    text += "&" + tokenind;
-                    for (int num4 = 0; num4 < self.regionPurpleTokens()[region].Count; num4++)
+                    try
                     {
-                        string str8 = string.Join("|", Array.ConvertAll(self.regionPurpleTokensAccessibility()[region][num4].ToArray(), (SlugcatStats.Name x) => x.ToString()));
-                        text = text + self.regionPurpleTokens()[region][num4].ToString() + "~" + str8;
-                        if (num4 != self.regionPurpleTokens()[region].Count - 1)
+                        if (!self.regionPurpleTokens().ContainsKey(region) || self.regionPurpleTokens()[region].Count == 0) return text;
+                        text += "&" + tokenind;
+                        for (int num4 = 0; num4 < self.regionPurpleTokens()[region].Count; num4++)
                         {
-                            text += ",";
+                            string str8 = string.Join("|", Array.ConvertAll(self.regionPurpleTokensAccessibility()[region][num4].ToArray(), (SlugcatStats.Name x) => x.ToString()));
+                            text = text + self.regionPurpleTokens()[region][num4].ToString() + "~" + str8;
+                            if (num4 != self.regionPurpleTokens()[region].Count - 1)
+                            {
+                                text += ",";
+                            }
                         }
                     }
+                    catch (Exception e) { CustomRegionsMod.CustomLog($"building purple token string broke for region {region}!\n" + e, true); }
                     return text;
                 });
                 c.Emit(OpCodes.Stloc, 5);
