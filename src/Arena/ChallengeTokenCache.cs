@@ -115,38 +115,41 @@ namespace CustomRegions.Arena
                 ))
             {
                 c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc, 1);
+                c.Emit(OpCodes.Ldarg_2);
                 c.Emit(OpCodes.Ldloc, 10);
                 c.Emit(OpCodes.Ldloc, num);
                 c.EmitDelegate((RainWorld self, string region, List<SlugcatStats.Name> slugcats, PlacedObject placedObject) => 
                 {
                     try
                     {
-                        if (!self.regionPurpleTokens().ContainsKey(region) || placedObject.type != ChallengeToken.PurpleToken || !ExtEnum<ChallengeData.ChallengeUnlockID>.values.entries.Contains((placedObject.data as CollectToken.CollectTokenData).tokenString))
+                        var fileName = region.ToLowerInvariant();
+                        if (!self.regionPurpleTokens().ContainsKey(fileName) || placedObject.type != ChallengeToken.PurpleToken || !ExtEnum<ChallengeData.ChallengeUnlockID>.values.entries.Contains((placedObject.data as CollectToken.CollectTokenData).tokenString))
                             return;
 
                         var collectTokenData = (placedObject.data as CollectToken.CollectTokenData);
                         var item = new ChallengeData.ChallengeUnlockID(collectTokenData.tokenString, false);
-                        if (!self.regionPurpleTokens()[region].Contains(item))
+                        if (!self.regionPurpleTokens()[fileName].Contains(item))
                         {
-                            self.regionPurpleTokens()[region].Add(item);
-                            self.regionPurpleTokensAccessibility()[region].Add(self.FilterTokenClearance(collectTokenData.availableToPlayers, /*oldData*/ new(), slugcats));
+                            self.regionPurpleTokens()[fileName].Add(item);
+                            self.regionPurpleTokensAccessibility()[fileName].Add(self.FilterTokenClearance(collectTokenData.availableToPlayers, /*oldData*/ new(), slugcats));
                         }
                         else
                         {
-                            int index = self.regionPurpleTokens()[region].IndexOf(item);
-                            self.regionPurpleTokensAccessibility()[region][index] = self.FilterTokenClearance(collectTokenData.availableToPlayers, self.regionPurpleTokensAccessibility()[region][index], slugcats);
+                            int index = self.regionPurpleTokens()[fileName].IndexOf(item);
+                            self.regionPurpleTokensAccessibility()[fileName][index] = self.FilterTokenClearance(collectTokenData.availableToPlayers, self.regionPurpleTokensAccessibility()[fileName][index], slugcats);
                         }
                     }
                     catch (Exception e) { CustomRegionsMod.CustomLog($"failed to register PurpleToken for region {region}!\n" + e, true); }
                 });
             }
+            else { CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for adding purple token to region"); }
 
 
             if (c.TryGotoNext(MoveType.AfterLabel,
-                x => x.MatchLdloc(0),
-                x => x.MatchLdstr("tokencache"),
                 x => x.MatchLdloc(1),
+                x => x.MatchLdstr("tokencache"),
+                x => x.MatchLdloc(0),
+                x => x.MatchLdfld(out var field) && field.Name == "fileName",
                 x => x.MatchLdstr(".txt"),
                 x => x.MatchCall<string>(nameof(string.Concat)),
                 x => x.MatchLdloc(5),
@@ -154,19 +157,20 @@ namespace CustomRegions.Arena
                 ))
             {
                 c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc, 1);
+                c.Emit(OpCodes.Ldarg_2);
                 c.Emit(OpCodes.Ldloc, 5);
-                c.EmitDelegate((RainWorld self, string region, string text) => 
+                c.EmitDelegate((RainWorld self, string region, string text) =>
                 {
                     try
                     {
-                        if (!self.regionPurpleTokens().ContainsKey(region) || self.regionPurpleTokens()[region].Count == 0) return text;
+                        var fileName = region.ToLowerInvariant();
+                        if (!self.regionPurpleTokens().ContainsKey(fileName) || self.regionPurpleTokens()[fileName].Count == 0) return text;
                         text += "&" + tokenind;
-                        for (int num4 = 0; num4 < self.regionPurpleTokens()[region].Count; num4++)
+                        for (int num4 = 0; num4 < self.regionPurpleTokens()[fileName].Count; num4++)
                         {
-                            string str8 = string.Join("|", Array.ConvertAll(self.regionPurpleTokensAccessibility()[region][num4].ToArray(), (SlugcatStats.Name x) => x.ToString()));
-                            text = text + self.regionPurpleTokens()[region][num4].ToString() + "~" + str8;
-                            if (num4 != self.regionPurpleTokens()[region].Count - 1)
+                            string str8 = string.Join("|", Array.ConvertAll(self.regionPurpleTokensAccessibility()[fileName][num4].ToArray(), (SlugcatStats.Name x) => x.ToString()));
+                            text = text + self.regionPurpleTokens()[fileName][num4].ToString() + "~" + str8;
+                            if (num4 != self.regionPurpleTokens()[fileName].Count - 1)
                             {
                                 text += ",";
                             }
@@ -177,6 +181,7 @@ namespace CustomRegions.Arena
                 });
                 c.Emit(OpCodes.Stloc, 5);
             }
+            else { CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for writing to text file"); }
         }
 
         private static void RainWorld_ReadTokenCache(On.RainWorld.orig_ReadTokenCache orig, RainWorld self)
