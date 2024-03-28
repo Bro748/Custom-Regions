@@ -83,22 +83,22 @@ namespace CustomRegions.Arena
         {
             var c = new ILCursor(il);
 
-            Mono.Cecil.FieldReference field = null!;
             if (c.TryGotoNext(MoveType.After,
-                x => x.MatchLdfld(out field) && field.Name == "fileName",
+                x => x.MatchLdfld(out var field) && field.Name == "fileName",
                 x => x.MatchNewobj<List<List<SlugcatStats.Name>>>(),
                 x => x.MatchCallvirt(typeof(Dictionary<string, List<List<SlugcatStats.Name>>>).GetMethod("set_Item"))
-                ))
+            ))
             {
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldfld, field);
+                c.Emit(OpCodes.Ldarg_2);
                 c.EmitDelegate((RainWorld self, string region) =>
                 {
                     try
                     {
-                        self.regionPurpleTokens()[region] = new();
-                        self.regionPurpleTokensAccessibility()[region] = new();
+                        var fileName = region.ToLowerInvariant();
+                        self.regionPurpleTokens()[fileName] = new();
+                        self.regionPurpleTokensAccessibility()[fileName] = new();
                     } catch (Exception e) { CustomRegionsMod.CustomLog($"adding region {region} to purple tokencache broke!\n" + e, true); }
                 });
             }
