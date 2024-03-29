@@ -116,7 +116,7 @@ namespace CustomRegions.Arena
             {
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldarg_2);
-                c.Emit(OpCodes.Ldloc, 10);
+                c.Emit(OpCodes.Ldloc, 12);
                 c.Emit(OpCodes.Ldloc, num);
                 c.EmitDelegate((RainWorld self, string region, List<SlugcatStats.Name> slugcats, PlacedObject placedObject) => 
                 {
@@ -210,10 +210,10 @@ namespace CustomRegions.Arena
                 {
                     string[] array2 = File.ReadAllText(path).Split('&');
 
-                    if (array2.Length >= 6 && array2[5].StartsWith(tokenind) && array2[5].Length > tokenind.Length)
+                    if (array2.Length >= 7 && array2[6].StartsWith(tokenind) && array2[6].Length > tokenind.Length)
                     {
-                        UnityEngine.Debug.Log(array2[5]);
-                        string[] array3 = Regex.Split(array2[5].Substring(tokenind.Length), ",");
+                        UnityEngine.Debug.Log(array2[6]);
+                        string[] array3 = Regex.Split(array2[6].Substring(tokenind.Length), ",");
                         for (int k = 0; k < array3.Length; k++)
                         {
                             string[] array4 = Regex.Split(array3[k], "~");
