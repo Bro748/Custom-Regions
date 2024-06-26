@@ -66,6 +66,11 @@ namespace CustomRegions.Mod
                 Arena.PreprocessorPatch.ApplyHooks();
                 RainWorldHooks.ApplyHooks();
                 WorldLoaderHook.ApplyHooks();
+                RegionProperties.RegionProperties.ApplyHooks();
+                RegionProperties.CycleRelatedHooks.ApplyHooks();
+                RegionProperties.ScavengerHooks.ApplyHooks();
+                RegionProperties.MiscHooks.ApplyHooks();
+                RegionProperties.InvHooks.ApplyHooks();
             } catch (Exception ex) {
                 BepLogError("Error while applying Hooks: " + ex.ToString());
             }
