@@ -1,8 +1,8 @@
-﻿using CustomRegions.Mod;
+﻿using CustomRegions.CustomWorld;
+using CustomRegions.Mod;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using static CustomRegions.CustomWorld.RegionPreprocessors;
 
 namespace CustomRegions.RegionProperties
 {
@@ -22,6 +23,7 @@ namespace CustomRegions.RegionProperties
         {
             public CRSProperties(Region region)
             {
+                CustomRegionsMod.CustomLog("CRSproperties");
                 var properties = region.regionParams.RawProperties();
                 foreach (string key in properties.Keys)
                 {
@@ -35,10 +37,10 @@ namespace CustomRegions.RegionProperties
                 {
                     switch (key)
                     {
-                        case nameof(musicAfterCycle): musicAfterCycle = value == "True"; break;
-                        case nameof(hideTimer): hideTimer = value == "True"; break;
-                        case nameof(wormGrassLight): wormGrassLight = value == "True"; break;
-                        case nameof(postCycleMusic): postCycleMusic = value == "True"; break;
+                        case nameof(musicAfterCycle): musicAfterCycle = value.ToLower() == "true"; break;
+                        case nameof(hideTimer): hideTimer = value.ToLower() == "true"; break;
+                        case nameof(wormGrassLight): wormGrassLight = value.ToLower() == "true"; break;
+                        case nameof(postCycleMusic): postCycleMusic = value.ToLower() == "true"; break;
                         case nameof(voidSpawnTarget): voidSpawnTarget = value; break;
                         case nameof(sundownMusic): sundownMusic = value; break;
                         case nameof(cycleLength): cycleLength = float.Parse(value); break;
@@ -59,11 +61,11 @@ namespace CustomRegions.RegionProperties
 
                         case nameof(rotEyeColor): rotEyeColor = ParseDLLColorDictionary(value); break;
                         case nameof(rotEffectColor): rotEffectColor = ParseDLLColorDictionary(value); break;
-                        case nameof(lightRodColor): lightRodColor = ParseColor(value); break;
-                        case nameof(batFlyGlowColor): batFlyGlowColor = ParseColor(value); break;
+                        case nameof(lightRodColor): lightRodColor = Utils.ParseColor(value); break;
+                        case nameof(batFlyGlowColor): batFlyGlowColor = Utils.ParseColor(value); break;
 
                         case nameof(dragonflyColor):
-                            var color = RWCustom.Custom.RGB2HSL(ParseColor(value));
+                            var color = RWCustom.Custom.RGB2HSL(Utils.ParseColor(value));
                             dragonflyColor = new(color.x, color.y, color.z); break;
 
                         case nameof(mapDefaultMatLayers):
@@ -86,17 +88,7 @@ namespace CustomRegions.RegionProperties
                         case "invBlackFade": blackFade = float.Parse(value); break;
                     }
                 }
-                catch (Exception e) { }
-            }
-
-            public static Color ParseColor(string s)
-            {
-                if (s.Contains(","))
-                {
-                    float[] array = s.Split(',').Select(x => float.Parse(x.Trim())).ToArray();
-                    return new Color(array[0], array[1], array[2]);
-                }
-                return RWCustom.Custom.hexToColor(s);
+                catch (Exception e) { CustomRegionsMod.CustomLog($"[ERROR] failed to parse property [{key}: {value}]\n{e}", true); }
             }
 
             public static Dictionary<CreatureTemplate.Type, Color> ParseDLLColorDictionary(string s)
@@ -123,7 +115,7 @@ namespace CustomRegions.RegionProperties
                 foreach (string str in array)
                 {
                     string[] array2 = Regex.Split(str, "-");
-                    result[array2[0]] = ParseColor(array2[1]);
+                    result[array2[0]] = Utils.ParseColor(array2[1]);
                 }
 
                 if (result.Count > 0) return result;
@@ -215,18 +207,35 @@ namespace CustomRegions.RegionProperties
         public static void ApplyHooks()
         {
             IL.Region.ctor += Region_ctor;
-            On.Region.ctor += Region_ctor1;
+            IL.World.LoadMapConfig += World_LoadMapConfig;
         }
 
-        private static void Region_ctor1(On.Region.orig_ctor orig, Region self, string name, int firstRoomIndex, int regionNumber, SlugcatStats.Name storyIndex)
+        private static void World_LoadMapConfig(ILContext il)
         {
-            orig(self, name, firstRoomIndex, regionNumber, storyIndex);
+            var c = new ILCursor(il);
+
+            if (c.TryGotoNext(MoveType.After, x => x.MatchCall(typeof(System.IO.File), nameof(System.IO.File.ReadAllLines))))
+            {
+                c.Emit(OpCodes.Ldarg, 1);
+                c.EmitDelegate((string[] array, SlugcatStats.Name slug) => Utils.ProcessSlugcatConditions(array, slug).ToArray());
+            }
+            else
+            { CustomRegionsMod.BepLogError($"failed to ilhook World.LoadMapConfig"); }
         }
+
 
         private static void Region_ctor(ILContext il)
         {
             var c = new ILCursor(il);
 
+            if (c.TryGotoNext(MoveType.After, x => x.MatchCall(typeof(System.IO.File), nameof(System.IO.File.ReadAllLines))))
+            {
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldarg, 4);
+                c.EmitDelegate(PreprocessProperties);
+            }
+            else
+            { CustomRegionsMod.BepLogError($"failed to ilhook Region.ctor"); }
             if (c.TryGotoNext(MoveType.After,
                 x => x.MatchLdloc(7),
                 x => x.MatchLdcI4(0),
@@ -238,20 +247,36 @@ namespace CustomRegions.RegionProperties
             {
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldloc, 7);
-                c.EmitDelegate((Region self, string[] propertyLine) =>
-                {
-                    if (!VanillaProperty(propertyLine[0]))
-                    {
-                        self.regionParams.RawProperties()[propertyLine[0]] = propertyLine[1];
-                    }
-                });
-            }
-            c.Index = 0;
-            while (c.TryGotoNext(MoveType.After, x => x.MatchCall(typeof(System.IO.File), nameof(System.IO.File.ReadAllLines))))
-            {
-            
+                c.EmitDelegate(CreateRawCustomProperties);
             }
         }
+
+        public static void CreateRawCustomProperties(Region self, string[] propertyLine)
+        {
+            if (!VanillaProperty(propertyLine[0]))
+            { self.regionParams.RawProperties()[propertyLine[0]] = propertyLine[1]; }
+        }
+
+        public static string[] PreprocessProperties(string[] lines, Region self, SlugcatStats.Name slug)
+        {
+            RegionInfo regionInfo = new()
+            {
+                RegionID = self.name,
+                Lines = lines.ToList(),
+                playerCharacter = slug
+            };
+
+            foreach (RegionPreprocessor filter in regionPreprocessors)
+            {
+                try
+                {
+                    filter(regionInfo);
+                }
+                catch (Exception e) { CustomRegionsMod.CustomLog($"Error when executing PreProcessor [{filter.Method.Name}]\n" + e.ToString(), true); }
+            }
+            return Utils.ProcessSlugcatConditions(regionInfo.Lines, slug).ToArray();
+        }
+
 
         private static bool VanillaProperty(string name)
         {
