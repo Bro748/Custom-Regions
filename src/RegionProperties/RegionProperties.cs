@@ -128,10 +128,7 @@ namespace CustomRegions.RegionProperties
                 {
                     string[] array2 = Regex.Split(str, "-");
                     AbstractPhysicalObject.AbstractObjectType type = new(array2[0]);
-                    if (type.index != -1)
-                    {
-                        result[type] = float.Parse(array2[1]);
-                    }
+                    result[type] = float.Parse(array2[1]);
                 }
 
                 if (result.Count > 0) return result;

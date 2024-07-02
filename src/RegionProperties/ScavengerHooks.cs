@@ -18,6 +18,72 @@ namespace CustomRegions.RegionProperties
             On.ScavengerAI.CollectScore_PhysicalObject_bool += ScavengerAI_CollectScore_PhysicalObject_bool;
             IL.ScavengerTreasury.ctor += ScavengerTreasury_ctor;
             IL.ScavengerAbstractAI.InitGearUp += ScavengerAbstractAI_InitGearUp;
+            On.AbstractCreature.IsEnteringDen += AbstractCreature_IsEnteringDen;
+            On.ScavengerAI.WeaponScore += ScavengerAI_WeaponScore;
+            On.Scavenger.Throw += Scavenger_Throw;
+            IL.ItemTracker.Update += ItemTracker_Update;
+        }
+
+        private static void ItemTracker_Update(ILContext il)
+        {
+            var c = new ILCursor(il);
+            if (c.TryGotoNext(MoveType.After, x => x.MatchIsinst<AbstractCreature>()))
+            {
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldloc_0);
+                c.EmitDelegate((bool orig, ItemTracker self, AbstractWorldEntity entity) => {  return orig && !(entity is AbstractCreature c && 
+                    (c.creatureTemplate.type == CreatureTemplate.Type.Hazer || c.creatureTemplate.type == CreatureTemplate.Type.VultureGrub)); });
+            }
+        }
+
+        private static void Scavenger_Throw(On.Scavenger.orig_Throw orig, Scavenger self, Vector2 throwDir)
+        {
+            if (self.grasps[0].grabbed is Hazer hazer)
+            { hazer.tossed = true; }
+
+            if (self.grasps[0].grabbed is VultureGrub grub)
+            { grub.InitiateSignalCountDown(); }
+
+            orig(self, throwDir);
+        }
+
+        private static int ScavengerAI_WeaponScore(On.ScavengerAI.orig_WeaponScore orig, ScavengerAI self, PhysicalObject obj, bool pickupDropInsteadOfWeaponSelection)
+        {
+            var dict = self.scavenger.room?.world.region?.GetCRSProperties().scavScoreItems;
+            if (dict != null && obj is Creature c)
+            {
+                if (c.dead) return 0;
+                if (c.Template.type == CreatureTemplate.Type.Hazer && dict.ContainsKey(FakeHazer) && dict[FakeHazer] > 0)
+                {
+                    if (!pickupDropInsteadOfWeaponSelection && self.focusCreature != null && self.focusCreature.representedCreature.creatureTemplate.type != CreatureTemplate.Type.Slugcat && self.focusCreature.representedCreature.creatureTemplate.visualRadius == 0) return 0;
+                    if (self.currentViolenceType == ScavengerAI.ViolenceType.Lethal) return 1;
+                    return 3;
+                }
+                if (c.Template.type == CreatureTemplate.Type.VultureGrub && dict.ContainsKey(FakeVultureGrub) && dict[FakeVultureGrub] > 0)
+                {
+                    if (!pickupDropInsteadOfWeaponSelection && !self.creature.Room.AnySkyAccess) return 0;
+                    if (self.currentViolenceType == ScavengerAI.ViolenceType.NonLethal) return 1;
+                    return 3;
+                }
+            }
+            return orig(self, obj, pickupDropInsteadOfWeaponSelection);
+        }
+
+        private static void AbstractCreature_IsEnteringDen(On.AbstractCreature.orig_IsEnteringDen orig, AbstractCreature self, WorldCoordinate den)
+        {
+            orig(self, den);
+
+            if (self.creatureTemplate.TopAncestor().type != CreatureTemplate.Type.Scavenger) return;
+
+            for (int i = self.stuckObjects.Count - 1; i >= 0; i--)
+            {
+                if (i >= self.stuckObjects.Count || self.stuckObjects[i] is not AbstractPhysicalObject.CreatureGripStick || self.stuckObjects[i].A != self)
+                { continue; }
+                if (self.stuckObjects[i].B is AbstractCreature creature && (creature.creatureTemplate.type == CreatureTemplate.Type.Hazer || creature.creatureTemplate.type == CreatureTemplate.Type.VultureGrub))
+                {
+                    creature.state.alive = true;
+                }
+            }
         }
 
         private static void ScavengerAbstractAI_InitGearUp(ILContext il)
@@ -48,6 +114,8 @@ namespace CustomRegions.RegionProperties
                         if (UnityEngine.Random.value < items[type])
                         {
                             var obj = GenerateDefaultObject(room.world, type, self.parent.pos);
+                            if (obj == null) continue;
+
                             room.AddEntity(obj);
                             new AbstractPhysicalObject.CreatureGripStick(self.parent, obj, i, true);
                             i--;
@@ -96,10 +164,21 @@ namespace CustomRegions.RegionProperties
             else if (obj is MoreSlugcats.LillyPuck l && l.BitesLeft != 3)
                 return false;
 
+            else if (obj is Hazer h && h.dead)
+                return false;
+
+            else if (obj is VultureGrub g && g.dead)
+                return false;
+
             return true;
         }
 
+        public static AbstractPhysicalObject.AbstractObjectType FakeKingVultureMask = new("KingVultureMask", false);
         public static AbstractPhysicalObject.AbstractObjectType FakeExplosiveSpear = new("ExplosiveSpear", false);
+        public static AbstractPhysicalObject.AbstractObjectType FakeElectricSpear = new("ElectricSpear", false);
+        public static AbstractPhysicalObject.AbstractObjectType FakeHellSpear = new("HellSpear", false);
+        public static AbstractPhysicalObject.AbstractObjectType FakeHazer = new("Hazer", false);
+        public static AbstractPhysicalObject.AbstractObjectType FakeVultureGrub = new("VultureGrub", false);
         public static AbstractPhysicalObject.AbstractObjectType FakeNone = new("None", false);
 
         public static AbstractPhysicalObject GenerateDefaultObject(World world, AbstractPhysicalObject.AbstractObjectType type, WorldCoordinate pos)
@@ -109,10 +188,32 @@ namespace CustomRegions.RegionProperties
             {
                 return null;
             }
+            if (type == FakeKingVultureMask)
+            {
+                return new VultureMask.AbstractVultureMask(world, null, pos, id, id.RandomSeed, true);
+            }
             if (type == FakeExplosiveSpear)
             {
                 return new AbstractSpear(world, null, pos, id, true);
             }
+            if (type == FakeElectricSpear)
+            {
+                return new AbstractSpear(world, null, pos, id, false, true);
+            }
+            if (type == FakeHellSpear)
+            {
+                return new AbstractSpear(world, null, pos, id, false, Mathf.Lerp(0.35f, 0.6f, UnityEngine.Random.value));
+            }
+            if (type == FakeHazer)
+            {
+                return new AbstractCreature(world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Hazer), null, pos, id);
+            }
+
+            if (type == FakeVultureGrub)
+            {
+                return new AbstractCreature(world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.VultureGrub), null, pos, id);
+            }
+
             if (type == AbstractPhysicalObject.AbstractObjectType.Spear)
             {
                 return new AbstractSpear(world, null, pos, id, false);
@@ -154,14 +255,35 @@ namespace CustomRegions.RegionProperties
             {
                 return new AbstractConsumable(world, type, null, pos, world.game.GetNewID(), -1, -1, null);
             }
+            if (type.index == -1) return null;
             return new AbstractPhysicalObject(world, type, null, pos, world.game.GetNewID());
+        }
+
+        public static AbstractPhysicalObject.AbstractObjectType FakeType(AbstractPhysicalObject obj)
+        {
+            if (obj is AbstractSpear s)
+            {
+                if (s.explosive) return FakeExplosiveSpear;
+                if (s.electric) return FakeElectricSpear;
+                if (s.hue != 0) return FakeHellSpear;
+            }
+            if (obj is AbstractCreature c)
+            {
+                if (c.creatureTemplate.type == CreatureTemplate.Type.Hazer) return FakeHazer;
+                if (c.creatureTemplate.type == CreatureTemplate.Type.VultureGrub) return FakeVultureGrub;
+            }
+            if (obj is VultureMask.AbstractVultureMask m && m.king)
+            {
+                return FakeKingVultureMask;
+            }
+            return null;
         }
 
         private static int ScavengerAI_CollectScore_PhysicalObject_bool(On.ScavengerAI.orig_CollectScore_PhysicalObject_bool orig, ScavengerAI self, PhysicalObject obj, bool weaponFiltered)
         {
             var dict = self.scavenger.room?.world.region?.GetCRSProperties().scavScoreItems;
-            var type = obj.abstractPhysicalObject.type;
-            if (dict != null && dict.ContainsKey(type) && SpecialRequirements(self, obj))
+            var type = FakeType(obj?.abstractPhysicalObject) ?? obj?.abstractPhysicalObject?.type;
+            if (!(weaponFiltered && self.NeedAWeapon) && dict != null && type != null && dict.ContainsKey(type) && SpecialRequirements(self, obj))
             {
                 return (int)dict[type];
             }
@@ -173,9 +295,10 @@ namespace CustomRegions.RegionProperties
         {
             if (main)
             {
-                if (self.world?.region?.GetCRSProperties().scavMainTradeItem is AbstractPhysicalObject.AbstractObjectType type && type.index != -1)
+                if (self.world?.region?.GetCRSProperties().scavMainTradeItem is AbstractPhysicalObject.AbstractObjectType type)
                 {
-                    return GenerateDefaultObject(self.world, type, self.parent.pos);
+                    var obj = GenerateDefaultObject(self.world, type, self.parent.pos);
+                    if (obj != null) return obj;
                 }
             }
             else
@@ -184,9 +307,10 @@ namespace CustomRegions.RegionProperties
                 {
                     foreach (KeyValuePair<AbstractPhysicalObject.AbstractObjectType, float> pair in self.world?.region?.GetCRSProperties().scavTradeItems)
                     {
-                        if (UnityEngine.Random.value < pair.Value && pair.Key.index != -1)
+                        if (UnityEngine.Random.value < pair.Value)
                         {
-                            return GenerateDefaultObject(self.world, pair.Key, self.parent.pos);
+                            var obj = GenerateDefaultObject(self.world, pair.Key, self.parent.pos);
+                            if (obj != null) return obj;
                         }
                     }
                 }
