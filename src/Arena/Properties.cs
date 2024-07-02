@@ -64,7 +64,7 @@ namespace CustomRegions.Arena
                 if (!File.Exists(properties)) return;
 
                 CustomRegionsMod.CustomLog($"loading arena properties [{properties}]");
-                foreach (string line in RegionProperties.RegionProperties.PreprocessProperties(File.ReadAllLines(properties), self, storyIndex))
+                foreach (string line in RegionProperties.RegionProperties.GenerateProperties(File.ReadAllLines(properties), self, storyIndex))
                 {
                     string[] array = Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(line, ":"), ": ");
                     if (array.Length < 2) { continue; }
@@ -87,7 +87,6 @@ namespace CustomRegions.Arena
                     case "corruptionEyeColor": regionParams.corruptionEyeColor = Utils.ParseColor(value); break;
                     case "kelpColor": regionParams.kelpColor = Utils.ParseColor(value); break;
                     case "GlacialWasteland": regionParams.glacialWasteland = int.Parse(value) > 0; break;
-                    default: RegionProperties.RegionProperties.CreateRawCustomProperties(self, new string[] { key, value }); break;
                     //none of the rest are really usable in arena :/
                     /*case "Room Setting Templates":
                         {

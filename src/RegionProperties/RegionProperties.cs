@@ -1,12 +1,10 @@
-﻿using CustomRegions.CustomWorld;
+﻿using BepInEx;
 using CustomRegions.Mod;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -24,7 +22,7 @@ namespace CustomRegions.RegionProperties
             public CRSProperties(Region region)
             {
                 CustomRegionsMod.CustomLog("CRSproperties");
-                var properties = region.regionParams.RawProperties();
+                var properties = region.regionParams.GetRawProperties().CustomProperties;
                 foreach (string key in properties.Keys)
                 {
                     ParseCustomProperty(key, properties[key]);
@@ -200,14 +198,22 @@ namespace CustomRegions.RegionProperties
 
         }
 
-        private static ConditionalWeakTable<Region.RegionParams, Dictionary<string, string>> _RawProperties = new();
+        private static ConditionalWeakTable<Region.RegionParams, RawProperties> _RawProperties = new();
 
-        public static Dictionary<string, string> RawProperties(this Region.RegionParams p) => _RawProperties.GetValue(p, _ => new());
+        public static RawProperties GetRawProperties(this Region.RegionParams p) => _RawProperties.GetValue(p, _ => new());
 
         public static void ApplyHooks()
         {
             IL.Region.ctor += Region_ctor;
             IL.World.LoadMapConfig += World_LoadMapConfig;
+            On.Region.ctor += Region_ctor1;
+        }
+
+        private static void Region_ctor1(On.Region.orig_ctor orig, Region self, string name, int firstRoomIndex, int regionNumber, SlugcatStats.Name storyIndex)
+        {
+            orig(self, name, firstRoomIndex, regionNumber, storyIndex);
+            CustomRegionsMod.CustomLog(string.Join(", ", self.subRegions));
+            CustomRegionsMod.CustomLog(string.Join(", ", self.altSubRegions));
         }
 
         private static void World_LoadMapConfig(ILContext il)
@@ -216,8 +222,10 @@ namespace CustomRegions.RegionProperties
 
             if (c.TryGotoNext(MoveType.After, x => x.MatchCall(typeof(System.IO.File), nameof(System.IO.File.ReadAllLines))))
             {
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldfld, typeof(World).GetField("region"));
                 c.Emit(OpCodes.Ldarg, 1);
-                c.EmitDelegate((string[] array, SlugcatStats.Name slug) => Utils.ProcessSlugcatConditions(array, slug).ToArray());
+                c.EmitDelegate(GenerateProperties);
             }
             else
             { CustomRegionsMod.BepLogError($"failed to ilhook World.LoadMapConfig"); }
@@ -232,29 +240,31 @@ namespace CustomRegions.RegionProperties
             {
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldarg, 4);
-                c.EmitDelegate(PreprocessProperties);
+                c.EmitDelegate(GenerateProperties);
             }
             else
             { CustomRegionsMod.BepLogError($"failed to ilhook Region.ctor"); }
-            if (c.TryGotoNext(MoveType.After,
-                x => x.MatchLdloc(7),
-                x => x.MatchLdcI4(0),
-                x => x.MatchLdelemRef(),
-                x => x.MatchStloc(12),
-                x => x.MatchLdloc(12),
-                x => x.MatchBrfalse(out _)
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc, 7);
-                c.EmitDelegate(CreateRawCustomProperties);
-            }
         }
 
-        public static void CreateRawCustomProperties(Region self, string[] propertyLine)
+        public static string[] GenerateProperties(string[] lines, Region self, SlugcatStats.Name slug)
         {
-            if (!VanillaProperty(propertyLine[0]))
-            { self.regionParams.RawProperties()[propertyLine[0]] = propertyLine[1]; }
+            RawProperties p = self.regionParams.GetRawProperties();
+            foreach (string line in PreprocessProperties(lines, self, slug))
+            {
+                if (line.IsNullOrWhiteSpace()) continue;
+
+                string[] array = Regex.Split(line, ": ");
+                p.RegisterProperty(array);
+            }
+
+            if (p.parent != null)
+            { 
+                p.InheritFromParent(GetParentProperties(self, p.parent));
+                CustomRegionsMod.CustomLog(string.Join("\n", p.AllProperties));
+
+            }
+
+            return p.AllProperties;
         }
 
         public static string[] PreprocessProperties(string[] lines, Region self, SlugcatStats.Name slug)
@@ -274,9 +284,96 @@ namespace CustomRegions.RegionProperties
                 }
                 catch (Exception e) { CustomRegionsMod.CustomLog($"Error when executing PreProcessor [{filter.Method.Name}]\n" + e.ToString(), true); }
             }
+
             return Utils.ProcessSlugcatConditions(regionInfo.Lines, slug).ToArray();
         }
 
+        public static RawProperties GetParentProperties(Region self, string parentName)
+        {
+            if (self.regionNumber != RegionParentID) RecursionStopper = 0;
+            else RecursionStopper++;
+
+            if (RecursionStopper > 100)
+            {
+                CustomRegionsMod.CustomLog($"[WARNING]: Region [{self.name}] properties file exceeded 100 parents! Possible infinite inheritance loop?");
+                return null;
+            }
+
+            string[] array2 = Regex.Split(parentName, "-");
+            SlugcatStats.Name parentSlug = array2.Length >= 2 ? new(array2[1]) : null;
+            CustomRegionsMod.CustomLog($"region [{self.name}] is loading parent [{array2[0]}] for slug [{parentSlug}]");
+            Region parent = new(array2[0], 0, RegionParentID, parentSlug);
+
+            return parent.regionParams.GetRawProperties();
+        }
+
+        private static int RecursionStopper = 0;
+        private const int RegionParentID = -10;
+
+
+        public class RawProperties
+        {
+            public void RegisterProperty(string[] propertyLine)
+            {
+                if (propertyLine.Length == 1 || propertyLine.Length > 2)
+                { unrecognized.Add(string.Join(": ", propertyLine)); }
+
+                else if (propertyLine[0] == "PARENT")
+                { parent = propertyLine[1]; }
+
+                else if (propertyLine[0] == "Room_Attr" && propertyLine.Length >= 3)
+                { RoomAttractions[propertyLine[1]] = propertyLine[2]; }
+
+                else if (propertyLine[0] == "Subregion")
+                { subregions.Add(propertyLine[1]); }
+
+                else if (VanillaProperty(propertyLine[0]))
+                { VanillaProperties[propertyLine[0]] = propertyLine[1]; }
+
+                else
+                { CustomProperties[propertyLine[0]] = propertyLine[1]; }
+            }
+
+            public void InheritFromParent(RawProperties parent)
+            {
+                foreach (var pair in parent.RoomAttractions)
+                {
+                    if (!RoomAttractions.ContainsKey(pair.Key))
+                    { RoomAttractions[pair.Key] = pair.Value; }
+                }
+                foreach (var pair in parent.VanillaProperties)
+                {
+                    if (!VanillaProperties.ContainsKey(pair.Key))
+                    { VanillaProperties[pair.Key] = pair.Value; }
+                }
+                foreach (var pair in parent.CustomProperties)
+                {
+                    if (!CustomProperties.ContainsKey(pair.Key))
+                    { CustomProperties[pair.Key] = pair.Value; }
+                }
+
+                for (int i = 0; i < parent.subregions.Count; i++)
+                {
+                    if (i >= subregions.Count)
+                    { subregions.Add(parent.subregions[i]); }
+                }
+            }
+
+            public string[] AllProperties => VanillaProperties.Select(p => p.Key + ": " + p.Value)
+                                     .Concat(subregions.Select(s => "Subregion: " + s))
+                                     .Concat(CustomProperties.Select(p => p.Key + ": " + p.Value))
+                                     .Concat(unrecognized)
+                                     .Concat(RoomAttractions.Select(p => "Room_Attr: " + p.Key + ": " + p.Value))
+                                     .ToArray();
+
+            public Dictionary<string, string> VanillaProperties = new();
+            public Dictionary<string, string> CustomProperties = new();
+            public Dictionary<string, string> RoomAttractions = new();
+            public List<string> subregions = new();
+            public List<string> unrecognized = new();
+
+            public string parent;
+        }
 
         private static bool VanillaProperty(string name)
         {
