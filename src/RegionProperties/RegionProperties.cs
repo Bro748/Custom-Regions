@@ -39,6 +39,7 @@ namespace CustomRegions.RegionProperties
                         case nameof(hideTimer): hideTimer = value.ToLower() == "true"; break;
                         case nameof(wormGrassLight): wormGrassLight = value.ToLower() == "true"; break;
                         case nameof(postCycleMusic): postCycleMusic = value.ToLower() == "true"; break;
+                        case nameof(hideVoidSpawn): hideVoidSpawn = value.ToLower() == "true"; break;
                         case nameof(voidSpawnTarget): voidSpawnTarget = value; break;
                         case nameof(sundownMusic): sundownMusic = value; break;
                         case nameof(cycleLength): cycleLength = float.Parse(value); break;
@@ -46,6 +47,7 @@ namespace CustomRegions.RegionProperties
                         case nameof(rivStormyPreCycleChance): rivStormyPreCycleChance = float.Parse(value); break;
                         case nameof(forcePreCycleChance): rivStormyPreCycleChance = float.Parse(value); break;
                         case nameof(throwObjectsThreshold): throwObjectsThreshold = float.Parse(value); break;
+                        case nameof(superStructureFusesBroken): superStructureFusesBroken = float.Parse(value); break;
                         case nameof(minScavSquad): minScavSquad = int.Parse(value); break;
                         case nameof(maxScavSquad): maxScavSquad = int.Parse(value); break;
                         case nameof(scavMainTradeItem): scavMainTradeItem = new AbstractPhysicalObject.AbstractObjectType(value); break;
@@ -60,11 +62,15 @@ namespace CustomRegions.RegionProperties
                         case nameof(rotEyeColor): rotEyeColor = ParseDLLColorDictionary(value); break;
                         case nameof(rotEffectColor): rotEffectColor = ParseDLLColorDictionary(value); break;
                         case nameof(lightRodColor): lightRodColor = Utils.ParseColor(value); break;
-                        case nameof(batFlyGlowColor): batFlyGlowColor = Utils.ParseColor(value); break;
+                        case nameof(batGlowColor): batGlowColor = Utils.ParseColor(value); break;
 
                         case nameof(dragonflyColor):
                             var color = RWCustom.Custom.RGB2HSL(Utils.ParseColor(value));
                             dragonflyColor = new(color.x, color.y, color.z); break;
+
+                        case nameof(fireflyColor):
+                            var color2 = RWCustom.Custom.RGB2HSL(Utils.ParseColor(value));
+                            fireflyColor = new(color2.x, color2.y, color2.z); break;
 
                         case nameof(mapDefaultMatLayers):
                             mapDefaultMatLayers = new bool[3];
@@ -79,11 +85,11 @@ namespace CustomRegions.RegionProperties
                             }
                             break;
 
-                        case "invPainJumps": painJumps = value == "True"; break;
-                        case "invExplosiveSnails": explosiveSnails = value == "True"; break;
-                        case "invWormgrassSpam": wormgrassSpam = float.Parse(value); break;
-                        case "invGrimeSpam": grimeSpam = float.Parse(value); break;
-                        case "invBlackFade": blackFade = float.Parse(value); break;
+                        case nameof(invPainJumps): invPainJumps = value == "True"; break;
+                        case nameof(invExplosiveSnails): invExplosiveSnails = value == "True"; break;
+                        case nameof(invWormgrassSpam): invWormgrassSpam = float.Parse(value); break;
+                        case nameof(invGrimeSpam): invGrimeSpam = float.Parse(value); break;
+                        case nameof(invBlackFade): invBlackFade = float.Parse(value); break;
                     }
                 }
                 catch (Exception e) { CustomRegionsMod.CustomLog($"[ERROR] failed to parse property [{key}: {value}]\n{e}", true); }
@@ -151,6 +157,8 @@ namespace CustomRegions.RegionProperties
 
             public float? throwObjectsThreshold;
 
+            public float? superStructureFusesBroken;
+
             public bool[] mapDefaultMatLayers = new bool[3];
 
             public int? minScavSquad;
@@ -158,15 +166,19 @@ namespace CustomRegions.RegionProperties
 
             public string voidSpawnTarget;
 
+            public bool? hideVoidSpawn;
+
             public bool? postCycleMusic;
 
             public string sundownMusic;
 
             public HSLColor? dragonflyColor;
 
+            public HSLColor? fireflyColor;
+
             public Color? lightRodColor;
 
-            public Color? batFlyGlowColor;
+            public Color? batGlowColor;
 
             public Dictionary<CreatureTemplate.Type, Color> rotEyeColor;
 
@@ -187,11 +199,11 @@ namespace CustomRegions.RegionProperties
 
             public Dictionary<AbstractPhysicalObject.AbstractObjectType, float> dropwigBaitItems;
 
-            public bool? painJumps; //CC gimmick
-            public bool? explosiveSnails; //DS gimmick
-            public float? wormgrassSpam; //LF gimmick, Room.Loaded
-            public float? grimeSpam; //VS gimmick, Room.Update
-            public float? blackFade; //SB gimmick, RoomCamera.Update
+            public bool? invPainJumps; //CC gimmick
+            public bool? invExplosiveSnails; //DS gimmick
+            public float? invWormgrassSpam; //LF gimmick
+            public float? invGrimeSpam; //VS gimmic
+            public float? invBlackFade; //SB gimmick
 
         }
 
@@ -312,14 +324,14 @@ namespace CustomRegions.RegionProperties
         {
             public void RegisterProperty(string[] propertyLine)
             {
-                if (propertyLine.Length == 1 || propertyLine.Length > 2)
+                if (propertyLine[0] == "Room_Attr" && propertyLine.Length >= 3)
+                { RoomAttractions[propertyLine[1]] = propertyLine[2]; }
+
+                else if (propertyLine.Length != 2)
                 { unrecognized.Add(string.Join(": ", propertyLine)); }
 
                 else if (propertyLine[0] == "PARENT")
                 { parent = propertyLine[1]; }
-
-                else if (propertyLine[0] == "Room_Attr" && propertyLine.Length >= 3)
-                { RoomAttractions[propertyLine[1]] = propertyLine[2]; }
 
                 else if (propertyLine[0] == "Subregion")
                 { subregions.Add(propertyLine[1]); }

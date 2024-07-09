@@ -30,10 +30,13 @@ namespace CustomRegions.RegionProperties
             if (c.TryGotoNext(MoveType.After, x => x.MatchIsinst<AbstractCreature>()))
             {
                 c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc_0);
-                c.EmitDelegate((bool orig, ItemTracker self, AbstractWorldEntity entity) => {  return orig && !(entity is AbstractCreature c && 
-                    (c.creatureTemplate.type == CreatureTemplate.Type.Hazer || c.creatureTemplate.type == CreatureTemplate.Type.VultureGrub)); });
+                c.EmitDelegate((AbstractCreature c, ItemTracker self) =>
+                {
+                    if (c == null || self.AI is ScavengerAI && (c.creatureTemplate.type == CreatureTemplate.Type.Hazer || c.creatureTemplate.type == CreatureTemplate.Type.VultureGrub)) return null;
+                    return c;
+                });
             }
+            else CustomRegionsMod.BepLogError("failed to ilhook ItemTracker.Update");
         }
 
         private static void Scavenger_Throw(On.Scavenger.orig_Throw orig, Scavenger self, Vector2 throwDir)
