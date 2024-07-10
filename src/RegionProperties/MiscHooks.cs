@@ -53,7 +53,7 @@ internal static class MiscHooks
         private static void FireFly_ctor(On.FireFly.orig_ctor orig, FireFly self, Room room, Vector2 pos)
         {
             orig(self, room, pos);
-            if (self.room?.world.region?.GetCRSProperties().fireflyColor is HSLColor color)
+            if (room.world.region?.GetCRSProperties().fireflyColor is HSLColor color)
             {
                 self.col = RWCustom.Custom.HSL2RGB(Mathf.Lerp(color.hue - 0.025f, color.hue + 0.025f, UnityEngine.Random.value), color.saturation, color.lightness);
             }

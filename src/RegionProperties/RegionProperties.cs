@@ -215,14 +215,6 @@ namespace CustomRegions.RegionProperties
         {
             IL.Region.ctor += Region_ctor;
             IL.World.LoadMapConfig += World_LoadMapConfig;
-            On.Region.ctor += Region_ctor1;
-        }
-
-        private static void Region_ctor1(On.Region.orig_ctor orig, Region self, string name, int firstRoomIndex, int regionNumber, SlugcatStats.Name storyIndex)
-        {
-            orig(self, name, firstRoomIndex, regionNumber, storyIndex);
-            CustomRegionsMod.CustomLog(string.Join(", ", self.subRegions));
-            CustomRegionsMod.CustomLog(string.Join(", ", self.altSubRegions));
         }
 
         private static void World_LoadMapConfig(ILContext il)
@@ -271,6 +263,8 @@ namespace CustomRegions.RegionProperties
                 if (p.parent != null)
                 {
                     p.InheritFromParent(GetParentProperties(self, p.parent));
+                    CustomRegionsMod.CustomLog($"[{self.name}] properties inheriting from parent [{p.parent}]");
+                    CustomRegionsMod.CustomLog(string.Join("\n", p.AllProperties), false, CustomRegionsMod.DebugLevel.FULL);
                 }
 
                 return p.AllProperties;

@@ -42,11 +42,9 @@ namespace CustomRegions.Arena
 
             if (singleRoomWorld)
             {
-                CustomRegionsMod.CustomLog($"loading single world [{worldName}] with room [{self.activeWorld.GetAbstractRoom(0).name}]");
                 string text = WorldLoader.FindRoomFile(self.activeWorld.GetAbstractRoom(0).name, false, "_Properties.txt");
                 if (File.Exists(text))
                 {
-                    CustomRegionsMod.CustomLog($"found arena properties [{text}]");
                     self.activeWorld.region = new Region(self.activeWorld.GetAbstractRoom(0).name, 0, -1, null);
                 }
             }
@@ -63,7 +61,7 @@ namespace CustomRegions.Arena
                 string properties = WorldLoader.FindRoomFile(name, false, "_Properties.txt");
                 if (!File.Exists(properties)) return;
 
-                CustomRegionsMod.CustomLog($"loading arena properties [{properties}]");
+                CustomRegionsMod.CustomLog($"loading arena properties for room [{name}]");
                 foreach (string line in RegionProperties.RegionProperties.GenerateProperties(File.ReadAllLines(properties), self, storyIndex))
                 {
                     string[] array = Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(line, ":"), ": ");
