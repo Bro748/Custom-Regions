@@ -1,8 +1,12 @@
-﻿using CustomRegions.Mod;
+﻿using BepInEx;
+using CustomRegions.Mod;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace CustomRegions.Collectables
 {
@@ -11,6 +15,28 @@ namespace CustomRegions.Collectables
         public static void ApplyHooks()
         {
             On.MultiplayerUnlocks.LevelLockID += MultiplayerUnlocks_LevelLockID;
+            On.MultiplayerUnlocks.LevelDisplayName += MultiplayerUnlocks_LevelDisplayName;
+            IL.MultiplayerUnlocks.ctor += MultiplayerUnlocks_ctor;
+        }
+
+        private static void MultiplayerUnlocks_ctor(MonoMod.Cil.ILContext il)
+        {
+            var c = new ILCursor(il);
+            if (c.TryGotoNext(MoveType.After, x => x.MatchLdsfld<ExtEnumType>("get_Count"), x => x.MatchStloc(out _)))
+            {
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldloc_0);
+                c.EmitDelegate((MultiplayerUnlocks self, List<string> list) => {
+                    if (!self.unlockAll) return;
+                    list.AddRange(customLevelUnlocks.Select(x => x.Value.value));
+                });
+            }
+        }
+
+        private static string MultiplayerUnlocks_LevelDisplayName(On.MultiplayerUnlocks.orig_LevelDisplayName orig, string s)
+        {
+            if (customLevelNames.ContainsKey(s)) return customLevelNames[s];
+            return orig(s);
         }
 
         private static MultiplayerUnlocks.LevelUnlockID MultiplayerUnlocks_LevelLockID(On.MultiplayerUnlocks.orig_LevelLockID orig, string levelName)
@@ -34,6 +60,7 @@ namespace CustomRegions.Collectables
         }
 
         public static Dictionary<string, MultiplayerUnlocks.LevelUnlockID> customLevelUnlocks = new Dictionary<string, MultiplayerUnlocks.LevelUnlockID>();
+        public static Dictionary<string, string> customLevelNames = new Dictionary<string, string>();
 
 
         public static void RefreshArenaUnlocks()
@@ -47,7 +74,8 @@ namespace CustomRegions.Collectables
             foreach (KeyValuePair<string, MultiplayerUnlocks.LevelUnlockID> unlock in customLevelUnlocks)
             { unlock.Value?.Unregister(); }
 
-            customLevelUnlocks = new Dictionary<string, MultiplayerUnlocks.LevelUnlockID>();
+            customLevelUnlocks = new();
+            customLevelNames = new();
         }
 
         public static void RegisterArenaUnlocks()
@@ -59,7 +87,7 @@ namespace CustomRegions.Collectables
 
             foreach (string line in File.ReadAllLines(filePath))
             {
-                if (line.Equals(string.Empty))
+                if (line.IsNullOrWhiteSpace())
                 {
                     // Line empty, skip
                     continue;
@@ -78,6 +106,7 @@ namespace CustomRegions.Collectables
                     {
                         unlockID = new MultiplayerUnlocks.LevelUnlockID(lineDivided[0], true);
                     }
+                    levelNames = Regex.Split(lineDivided[1], ",");
                 }
                 catch (Exception e)
                 {
@@ -85,43 +114,32 @@ namespace CustomRegions.Collectables
                     continue;
                 }
 
-                try
+                foreach (string level in levelNames)
                 {
-                    levelNames = Regex.Split(lineDivided[1], ",");
-                    for (int j = 0; j < levelNames.Length; j++)
-                    {
-                        levelNames[j] = levelNames[j].Trim();
-                    }
-                }
-                catch (Exception e)
-                {
-                    CustomRegionsMod.CustomLog("Error loading levelUnlock name" + e, true);
-                    continue;
-                }
+                    if (level.IsNullOrWhiteSpace())
+                    { continue; }
 
-                for (int j = 0; j < levelNames.Length; j++)
-                {
-                    if (levelNames[j].Equals(string.Empty))
-                    {
-                        continue;
-                    }
-
+                    string[] levelSplit = Regex.Split(level, "-");
+                    string levelFile = levelSplit[0].Trim();
+                    string levelName = levelSplit.Length >= 2 ? levelSplit[1].Trim() : levelFile;
+                    levelFile = levelFile.ToLower();
                     try
                     {
 
-                        if (!customLevelUnlocks.ContainsKey(levelNames[j]))
+                        if (!customLevelUnlocks.ContainsKey(levelFile))
                         {
-                            customLevelUnlocks.Add(levelNames[j].ToLower(), unlockID);
-                            CustomRegionsMod.CustomLog($"Added new level unlock: [{levelNames[j]}-{unlockID}]");
+                            customLevelUnlocks[levelFile] = unlockID;
+                            customLevelNames[levelFile] = levelName;
+                            CustomRegionsMod.CustomLog($"Added new level unlock: [{level}-{unlockID}]");
                         }
                         else
                         {
-                            CustomRegionsMod.CustomLog($"Duplicated arena name from two packs! [{levelNames[j]}]", true);
+                            CustomRegionsMod.CustomLog($"Duplicated arena name from two packs! [{level}]", true);
                         }
                     }
                     catch (Exception e)
                     {
-                        CustomRegionsMod.CustomLog($"Error adding level unlock ID [{levelNames[j]}] [{e}]", true);
+                        CustomRegionsMod.CustomLog($"Error adding level unlock ID [{level}] [{e}]", true);
                     }
                 }
             }
