@@ -196,11 +196,15 @@ namespace CustomRegions.CustomWorld
 
         private static void WorldLoader_GeneratePopulation(On.WorldLoader.orig_GeneratePopulation orig, WorldLoader self, bool fresh)
         {
-            foreach (AbstractRoom room in self.abstractRooms)
+
+            if (RemixMenu.CacheAlignmentFix.Value)
             {
-                if (room == null || room == self.world.offScreenDen) continue;
-                RainWorld.roomIndexToName[room.index] = room.name;
-                RainWorld.roomNameToIndex[room.name] = room.index;
+                foreach (AbstractRoom room in self.abstractRooms)
+                {
+                    if (room == null || room == self.world.offScreenDen) continue;
+                    RainWorld.roomIndexToName[room.index] = room.name;
+                    RainWorld.roomNameToIndex[room.name] = room.index;
+                }
             }
             orig(self, fresh);
         }
