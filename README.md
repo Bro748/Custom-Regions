@@ -423,7 +423,7 @@ CRS adds several properties, unhardcoding almost every region-specific change in
 | `wormGrassLight` | boolean | False | Makes wormgrass glow during night |
 | `hideVoidSpawn` | boolean | False | Disables void spawn |
 | `voidSpawnTarget` | room name | none | Name of room voidspawn will travel towards |
-| `mapDefaultMatLayers` | integers | none | Which layers of the map (0,1,2) should default to sky<br>(eg `mapDefaultMatLayers: 1,2`) |
+| `mapDefaultMatLayers` | integers | none | Which layers of the map (0,1,2) should default to sky (eg `mapDefaultMatLayers: 1,2`) |
 | `superStructureFusesBroken` | decimal | 0 | How broken superstructure fuses should be |
 | `SSLightRodColor` | color | 66FFD0 | The color of SSLightRods |
 | `batGlowColor` | color | none | Makes batflies glow |
@@ -432,14 +432,50 @@ CRS adds several properties, unhardcoding almost every region-specific change in
 | `minScavSquad` | integer | 3 | The lowest amount of scavengers in a squad |
 | `maxScavSquad` | integer | 7 | The largest amount of scavengers in a squad |
 | `scavMainTradeItem` | item | `ExplosiveSpear` | The item the scav trader should always have |
-| `scavTradeItems` | item-decimal dictionary | FlareBomb-0.05,<br>ScavengerBomb-0.2,<br>Mushroom-0.1,<br>KarmaFlower-0.02,<br>Spear-1 | Additional items a scav trader might have.<br>The number is the chance the trader will choose that item. |
-| `scavScoreItems` | item-decimal dictionary | [too long to list](https://rainworld.miraheze.org/wiki/Scavenger#Trading) | How much the scavs value each item.<br>It is required an item has a value for scavengers to hold them.<br>This dictionary won't override the values of any item not defined within it. |
-| `scavTreasuryItems` | item-decimal dictionary | DataPearl-0.1,<br>ScavengerBomb-0.142,<br>Lantern-0.05,<br>ExplosiveSpear-0.25,<br>Spear-1 | The items that will spawn in a scav treasury |
-| `scavGearItems` | item-decimal dictionary | ScavengerBomb-0.25,<br>FirecrackerPlant-0.08,<br>SporePlant-0.125,<br>Rock-0.5,<br>Rock-0.5 | The items a regular scav might spawn with |
-| `eliteScavGearItems` | item-decimal dictionary | SingularityBomb-0.25,<br>FirecrackerPlant-0.08,<br>SporePlant-0.125,<br>Rock-0.5,<br>Rock-0.5 | The items an elite scav might spawn with |
-| `dropwigBaitItems` | item-decimal dictionary | DangleFruit-0.5,<br>ExplosiveSpear-0.3,<br>Spear-0.3,<br>ScavengerBomb-0.5,<br>DataPearl-0.5,<br>KarmaFlower-0.5 | The items a dropwig might spawn with |
-| `rotEyeColor` | creature-color dictionary | BrotherLongLegs-7F4C00,<br>DaddyLongLegs-0000FF,<br>TerrorLongLegs-F400FF,<br>HunterDaddy-921D39 | The color of DLL-based creature eyes<br>only overrides for creatures specified |
-| `rotEffectColor` | creature-color dictionary | BrotherLongLegs-00B266,<br>DaddyLongLegs-0000FF,<br>TerrorLongLegs-F400FF,<br>HunterDaddy-921D39 | The color of DLL-based creature bodies<br>only overrides for creatures specified |
+
+| | |
+| ------------ | ------------- |
+| `scavTradeItems` | Additional items a scav trader might have. The number is the chance the trader will choose that item. |
+| **type:** item-decimal dictionary | **default:** FlareBomb-0.05, ScavengerBomb-0.2, Mushroom-0.1, KarmaFlower-0.02, Spear-1 | Additional items a scav trader might have. The number is the chance the trader will choose that item. |
+
+| | |
+| ------------ | ------------- |
+| `scavScoreItems` | How much the scavs value each item. It is required an item has a value for scavengers to hold them. This dictionary won't override the values of any item not defined within it. |
+| **type:** item-decimal dictionary | **default:** [too long to list](https://rainworld.miraheze.org/wiki/Scavenger#Trading) |
+
+| | |
+| ------------ | ------------- |
+| `scavTreasuryItems` | The items that will spawn in a scav treasury |
+| **type:** item-decimal dictionary | **default:** DataPearl-0.1, ScavengerBomb-0.142, Lantern-0.05, ExplosiveSpear-0.25, Spear-1 |
+
+| | |
+| ------------ | ------------- |
+| `scavGearItems` | The items a regular scav might spawn with |
+| **type:** item-decimal dictionary | **default:** ScavengerBomb-0.25, FirecrackerPlant-0.08, SporePlant-0.125, Rock-0.5, Rock-0.5 |
+
+| | |
+| ------------ | ------------- |
+| `eliteScavGearItems` | The items an elite scav might spawn with |
+| **type:** item-decimal dictionary | **default:** SingularityBomb-0.25, FirecrackerPlant-0.08, SporePlant-0.125, Rock-0.5, Rock-0.5 |
+
+| | |
+| ------------ | ------------- |
+| `dropwigBaitItems` | The items a dropwig might spawn with |
+| **type:** item-decimal dictionary | **default:** DangleFruit-0.5, ExplosiveSpear-0.3, Spear-0.3, ScavengerBomb-0.5, DataPearl-0.5, KarmaFlower-0.5 |
+
+| | |
+| ------------ | ------------- |
+| `rotEyeColor` | The color of DLL-based creature eyes only overrides for creatures specified |
+| **type:** creature-color dictionary | **default:** BrotherLongLegs-7F4C00, DaddyLongLegs-0000FF, TerrorLongLegs-F400FF, HunterDaddy-921D39 |
+
+| | |
+| ------------ | ------------- |
+| `rotEffectColor` | The color of DLL-based creature bodies only overrides for creatures specified |
+| **type:** creature-color dictionary | **default:** BrotherLongLegs-00B266, DaddyLongLegs-0000FF, TerrorLongLegs-F400FF, HunterDaddy-921D39 |
+
+Inv Properties:
+| Name | Type | Default Value | Description |
+| ------------ | ------------- | ----------- | ------------- |
 | `invPainJumps` | boolean | False | inv's CC gimmick |
 | `invExplosiveSnails` | boolean | False | inv's DS gimmick |
 | `invWormgrassSpam` | decimal | 0 | inv's LF gimmick, number is the chance to spawn wormgrass on each tile |
