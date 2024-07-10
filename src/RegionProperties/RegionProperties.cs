@@ -257,23 +257,29 @@ namespace CustomRegions.RegionProperties
 
         public static string[] GenerateProperties(string[] lines, Region self, SlugcatStats.Name slug)
         {
-            RawProperties p = self.regionParams.GetRawProperties();
-            foreach (string line in PreprocessProperties(lines, self, slug))
+            try
             {
-                if (line.IsNullOrWhiteSpace()) continue;
+                RawProperties p = self.regionParams.GetRawProperties();
+                foreach (string line in PreprocessProperties(lines, self, slug))
+                {
+                    if (line.IsNullOrWhiteSpace()) continue;
 
-                string[] array = Regex.Split(line, ": ");
-                p.RegisterProperty(array);
+                    string[] array = Regex.Split(line, ": ");
+                    p.RegisterProperty(array);
+                }
+
+                if (p.parent != null)
+                {
+                    p.InheritFromParent(GetParentProperties(self, p.parent));
+                }
+
+                return p.AllProperties;
             }
-
-            if (p.parent != null)
-            { 
-                p.InheritFromParent(GetParentProperties(self, p.parent));
-                CustomRegionsMod.CustomLog(string.Join("\n", p.AllProperties));
-
+            catch (Exception e) 
+            {
+                CustomRegionsMod.CustomLog("Error when generating custom properties!\n" + e, true);
+                return lines;
             }
-
-            return p.AllProperties;
         }
 
         public static string[] PreprocessProperties(string[] lines, Region self, SlugcatStats.Name slug)
