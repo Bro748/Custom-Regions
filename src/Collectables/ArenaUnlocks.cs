@@ -22,13 +22,16 @@ namespace CustomRegions.Collectables
         private static void MultiplayerUnlocks_ctor(MonoMod.Cil.ILContext il)
         {
             var c = new ILCursor(il);
-            if (c.TryGotoNext(MoveType.After, x => x.MatchLdsfld<ExtEnumType>("get_Count"), x => x.MatchStloc(out _)))
+            if (c.TryGotoNext(MoveType.Before, 
+                    x => x.MatchLdsfld(out _),
+                    x => x.MatchCallvirt<ExtEnumType>("get_Count"),
+                    x => x.MatchStloc(1)))
             {
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldloc_0);
-                c.EmitDelegate((MultiplayerUnlocks self, List<string> list) => {
+                c.EmitDelegate((MultiplayerUnlocks self, List<MultiplayerUnlocks.Unlock> list) => {
                     if (!self.unlockAll) return;
-                    list.AddRange(customLevelUnlocks.Select(x => x.Value.value));
+                    list.AddRange(customLevelUnlocks.Select(x => new MultiplayerUnlocks.Unlock(x.Value)));
                 });
             }
             else
