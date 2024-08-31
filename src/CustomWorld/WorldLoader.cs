@@ -192,6 +192,10 @@ namespace CustomRegions.CustomWorld
                     }
                 });
             }
+            else
+            {
+                CustomRegionsMod.BepLogError("CustomRegions.CustomWorld.WorldLoaderHook.WorldLoader_GeneratePopulation1: IL Hook failed.");
+            }
         }
 
         private static void WorldLoader_GeneratePopulation(On.WorldLoader.orig_GeneratePopulation orig, WorldLoader self, bool fresh)
@@ -229,6 +233,10 @@ namespace CustomRegions.CustomWorld
             {
                 c.RemoveRange(3);
                 c.Emit(OpCodes.Ldc_I4_0);
+            }
+            else
+            {
+                CustomRegionsMod.BepLogError("CustomRegions.CustomWorld.WorldLoaderHook.WorldLoader_AddLineageFromString: IL Hook failed.");
             }
         }
 

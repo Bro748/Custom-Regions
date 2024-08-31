@@ -103,7 +103,9 @@ namespace CustomRegions.Arena
                 });
             }
             else
-            { CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for resetting regions"); }
+            {
+                CustomRegionsMod.BepLogError("CustomRegions.Arena.ChallengeTokenCache.RainWorld_BuildTokenCache: IL Hook failed.");
+            }
 
             int num = 27;
             if (c.TryGotoNext(MoveType.After,
@@ -142,7 +144,10 @@ namespace CustomRegions.Arena
                     catch (Exception e) { CustomRegionsMod.CustomLog($"failed to register PurpleToken for region {region}!\n" + e, true); }
                 });
             }
-            else { CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for adding purple token to region"); }
+            else
+            {
+                CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for adding purple token to region");
+            }
 
 
             if (c.TryGotoNext(MoveType.AfterLabel,
@@ -181,7 +186,10 @@ namespace CustomRegions.Arena
                 });
                 c.Emit(OpCodes.Stloc, 5);
             }
-            else { CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for writing to text file"); }
+            else
+            {
+                CustomRegionsMod.BepLogError("failed to il hook BuildTokenCache for writing to text file");
+            }
         }
 
         private static void RainWorld_ReadTokenCache(On.RainWorld.orig_ReadTokenCache orig, RainWorld self)

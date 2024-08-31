@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using CustomRegions.Mod;
 using Mono.Cecil.Cil;
 using static CustomRegions.RegionProperties.RegionProperties;
 
@@ -79,6 +80,10 @@ namespace CustomRegions.RegionProperties
                     return orig;
                 });
                 c.Emit(OpCodes.Ldloc, index);
+            }
+            else
+            {
+                CustomRegionsMod.BepLogError("CustomRegions.RegionProperties.CycleRelatedHooks.RainCycle_ctor: IL Hook failed.");
             }
         }
 

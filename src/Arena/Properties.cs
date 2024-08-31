@@ -32,7 +32,7 @@ namespace CustomRegions.Arena
             }
             else
             {
-                CustomRegionsMod.BepLogError("failed to IL hook Menu.MultiplayerMenu.ctor!");
+                CustomRegionsMod.BepLogError("CustomRegions.Arena.Properties.MultiplayerMenu_ctor: IL Hook failed.");
             }
         }
 

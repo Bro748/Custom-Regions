@@ -48,7 +48,7 @@ namespace CustomRegions.Collectables
             }
             else
             {
-                CustomRegionsMod.BepLogError("failed to hook SLOracle.GrabObject");
+                CustomRegionsMod.BepLogError("CustomRegions.Collectables.CustomConvo.SLOracleBehaviorHasMark_GrabObject: IL Hook failed.");
             }
         }
 
@@ -73,7 +73,7 @@ namespace CustomRegions.Collectables
             }
             else
             {
-                CustomRegionsMod.BepLogError("failed to il hook Conversation.LoadEventsFromFile!");
+                CustomRegionsMod.BepLogError("CustomRegions.Collectables.CustomConvo.Conversation_LoadEventsFromFileIL: IL Hook failed.");
             }
         }
 

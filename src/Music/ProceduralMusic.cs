@@ -114,7 +114,7 @@ namespace CustomRegions.CustomMusic
             }
             else
             {
-                CustomRegionsMod.BepLogError("Failed to IL hook ProceduralMusicInstruction.ctor!");
+                CustomRegionsMod.BepLogError("CustomRegions.CustomMusic.ProceduralMusicHooks.ProceduralMusicInstruction_ctor: IL Hook failed.");
             }
         }
     }

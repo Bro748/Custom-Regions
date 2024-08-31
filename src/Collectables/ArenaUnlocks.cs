@@ -31,6 +31,10 @@ namespace CustomRegions.Collectables
                     list.AddRange(customLevelUnlocks.Select(x => x.Value.value));
                 });
             }
+            else
+            {
+                CustomRegionsMod.BepLogError("CustomRegions.Collectables.ArenaUnlocks.MultiplayerUnlocks_ctor: IL Hook failed.");
+            }
         }
 
         private static string MultiplayerUnlocks_LevelDisplayName(On.MultiplayerUnlocks.orig_LevelDisplayName orig, string s)

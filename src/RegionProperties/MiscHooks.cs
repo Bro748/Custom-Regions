@@ -268,7 +268,7 @@ internal static class MiscHooks
                 }
                 else
                 {
-                    CustomRegionsMod.BepLog("failed il match voidspawn room loaded");
+                    CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.MiscHooks.Room_Loaded: IL Hook part {i+1} failed.");
                 }
             }
         }

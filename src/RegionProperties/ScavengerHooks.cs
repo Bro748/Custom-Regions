@@ -36,7 +36,10 @@ namespace CustomRegions.RegionProperties
                     return c;
                 });
             }
-            else CustomRegionsMod.BepLogError("failed to ilhook ItemTracker.Update");
+            else
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.ScavengerHooks.ItemTracker_Update: IL Hook failed.");
+            }
         }
 
         private static void Scavenger_Throw(On.Scavenger.orig_Throw orig, Scavenger self, Vector2 throwDir)
@@ -129,7 +132,10 @@ namespace CustomRegions.RegionProperties
                 });
                 c.Emit(OpCodes.Stloc, index);
             }
-            else { CustomRegionsMod.BepLogError("failed to il match ScavengerAbstractAI.InitGearUp"); }
+            else
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.ScavengerHooks.ScavengerAbstractAI_InitGearUp: IL Hook failed.");
+            }
         }
         private static bool SpecialRequirements(ScavengerAI self, PhysicalObject obj)
         {
@@ -367,6 +373,10 @@ namespace CustomRegions.RegionProperties
                 });
                 c.Emit(OpCodes.Brfalse, label);
             }
+            else
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.ScavengerHooks.ScavengerAbstractAI_TryAssembleSquad: IL Hook Part 1 failed.");
+            }
 
             if (c.TryGotoNext(MoveType.After,
                 x => x.MatchLdloc(out loc),
@@ -388,7 +398,10 @@ namespace CustomRegions.RegionProperties
                     return orig;
                 });
             }
-            else { CustomRegionsMod.BepLogError("failed to il match ScavengerAbstractAI.TryAssembleSquad"); }
+            else
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.ScavengerHooks.ScavengerAbstractAI_TryAssembleSquad: IL Hook Part 2 failed.");
+            }
         }
 
         private static void ScavengerTreasury_ctor(ILContext il)
@@ -422,8 +435,10 @@ namespace CustomRegions.RegionProperties
 
                 });
             }
-
-            else { CustomRegionsMod.BepLogError("failed to il match ScavengerTreasury.ctor"); }
+            else
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.ScavengerHooks.ScavengerTreasury_ctor: IL Hook failed.");
+            }
         }
     }
 }
