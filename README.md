@@ -425,7 +425,7 @@ CRS adds several properties, unhardcoding almost every region-specific change in
 | `voidSpawnTarget` | room name | none | Name of room voidspawn will travel towards |
 | `mapDefaultMatLayers` | integers | none | Which layers of the map (0,1,2) should default to sky (eg `mapDefaultMatLayers: 1,2`) |
 | `superStructureFusesBroken` | decimal | 0 | How broken superstructure fuses should be |
-| `SSLightRodColor` | color | 66FFD0 | The color of SSLightRods |
+| `lightRodColor` | color | 66FFD0 | The color of SSLightRods |
 | `batGlowColor` | color | none | Makes batflies glow |
 | `dragonflyColor` | color | 197F42 | The color of TinyDragonflies insect |
 | `fireflyColor` | color | FFB200 | The color of TinyDragonflies insect |

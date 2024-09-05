@@ -61,6 +61,8 @@ namespace CustomRegions.RegionProperties
 
                         case nameof(rotEyeColor): rotEyeColor = ParseDLLColorDictionary(value); break;
                         case nameof(rotEffectColor): rotEffectColor = ParseDLLColorDictionary(value); break;
+
+                        case "SSLightRodColor":
                         case nameof(lightRodColor): lightRodColor = Utils.ParseColor(value); break;
                         case nameof(batGlowColor): batGlowColor = Utils.ParseColor(value); break;
 
@@ -159,7 +161,7 @@ namespace CustomRegions.RegionProperties
 
             public float? superStructureFusesBroken;
 
-            public bool[] mapDefaultMatLayers = new bool[3];
+            public bool[] mapDefaultMatLayers;
 
             public int? minScavSquad;
             public int? maxScavSquad;

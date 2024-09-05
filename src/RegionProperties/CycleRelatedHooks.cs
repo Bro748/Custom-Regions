@@ -72,11 +72,11 @@ namespace CustomRegions.RegionProperties
                         {
                             if (self.world.region?.GetCRSProperties().rivStormyPreCycleChance is float f)
                             {
-                                return f;
+                                return f * 100f;
                             }
                         }
                     }
-                    if (self.world.region?.GetCRSProperties().forcePreCycleChance is float f2) return f2;
+                    if (self.world.region?.GetCRSProperties().forcePreCycleChance is float f2) return f2 * 100f;
                     if (self.world.region?.regionParams.earlyCycleChance == 0f) return 0f;
                     return orig;
                 });
