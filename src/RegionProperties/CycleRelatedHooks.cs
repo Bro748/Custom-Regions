@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using CustomRegions.Mod;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using static CustomRegions.RegionProperties.RegionProperties;
 
@@ -56,7 +58,7 @@ namespace CustomRegions.RegionProperties
                 x => x.MatchCallvirt(out _),
                 x => x.MatchBrfalse(out _),
                 x => x.MatchLdcR4(0),
-                x => x.MatchLdloc(out index)
+                x => x.MatchStloc(out index)
                 ))
             {
                 c.Emit(OpCodes.Ldloc, index);
@@ -78,7 +80,11 @@ namespace CustomRegions.RegionProperties
                     if (self.world.region?.regionParams.earlyCycleChance == 0f) return 0f;
                     return orig;
                 });
-                c.Emit(OpCodes.Ldloc, index);
+                c.Emit(OpCodes.Stloc, index);
+            }
+            else
+            {
+                CustomRegionsMod.BepLogError("CustomRegions.RegionProperties.CycleRelatedHooks.RainCycle_ctor: IL Hook failed.");
             }
         }
 

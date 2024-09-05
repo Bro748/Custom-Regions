@@ -229,7 +229,9 @@ namespace CustomRegions.RegionProperties
                 c.EmitDelegate(GenerateProperties);
             }
             else
-            { CustomRegionsMod.BepLogError($"failed to ilhook World.LoadMapConfig"); }
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.RegionProperties.World_LoadMapConfig: IL Hook failed.");
+            }
         }
 
 
@@ -244,7 +246,9 @@ namespace CustomRegions.RegionProperties
                 c.EmitDelegate(GenerateProperties);
             }
             else
-            { CustomRegionsMod.BepLogError($"failed to ilhook Region.ctor"); }
+            {
+                CustomRegionsMod.BepLogError($"CustomRegions.RegionProperties.RegionProperties.Region_ctor: IL Hook failed.");
+            }
         }
 
         public static string[] GenerateProperties(string[] lines, Region self, SlugcatStats.Name slug)
