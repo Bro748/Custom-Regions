@@ -1,7 +1,7 @@
 ﻿{
   "id": "crs",
   "name": "Custom Regions Support",
-  "version": "0.10.5.0",
+  "version": "0.10.5.1",
   "authors": "Garrakx & Bro",
   "description": "Support for modded regions! Thumbnail by @Nautillo1",
   "tags": ["Regions", "Dependency"],
