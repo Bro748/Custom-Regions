@@ -292,18 +292,18 @@ namespace CustomRegions.Collectables
             if (!File.Exists(customFilePath)) return;
             foreach (string str in File.ReadAllLines(customFilePath))
             {
-                string[] array = Regex.Split(str, " : ");
+                string[] array = str.Split([" : "], System.StringSplitOptions.None);
                 if (array.Length < 2 || string.IsNullOrEmpty(array[0]) || string.IsNullOrEmpty(array[1])) continue;
 
                 CustomRegionsMod.CustomLog($"New ChatlogID, [{array[0]}]");
                 ChatlogID id = new(array[0], true);
-                string[] array2 = Regex.Split( array[1], " > ");
+                string[] array2 = array[1].Split([" > "], System.StringSplitOptions.None);
 
                 List<KeyValuePair<Structs.CustomBroadcast.Type, List<string>>> files = new();
 
                 foreach (string block in array2)
                 {
-                    List<string> array3 = Regex.Split(block, ", ").ToList();
+                    List<string> array3 = block.Split([", "], System.StringSplitOptions.None).ToList();
                     if (array3.Count > 1)
                     {
                         CustomRegionsMod.CustomLog($"Section is random, includes elements [{string.Join(", ", array3)}]");

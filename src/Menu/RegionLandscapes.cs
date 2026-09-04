@@ -81,8 +81,9 @@ namespace CustomRegions.CustomMenu
                 string[] array3 = File.ReadAllLines(path2);
                 int num3 = 0;
                 while (num3 < array3.Length && num3 < scene.depthIllustrations.Count) {
-                    scene.depthIllustrations[num3].pos.x = float.Parse(Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(array3[num3], ","), ", ")[0], NumberStyles.Any, CultureInfo.InvariantCulture);
-                    scene.depthIllustrations[num3].pos.y = float.Parse(Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(array3[num3], ","), ", ")[1], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    string[] splitPoss = RWCustom.Custom.ValidateSpacedDelimiter(array3[num3], ",").Split([", "], StringSplitOptions.None);
+                    scene.depthIllustrations[num3].pos.x = float.Parse(splitPoss[0], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    scene.depthIllustrations[num3].pos.y = float.Parse(splitPoss[1], NumberStyles.Any, CultureInfo.InvariantCulture);
                     scene.depthIllustrations[num3].lastPos = scene.depthIllustrations[num3].pos;
                     num3++;
                 }
@@ -129,7 +130,7 @@ namespace CustomRegions.CustomMenu
             if (!File.Exists(AssetManager.ResolveFilePath(path))) { goto LandscapeTitle; }
 
             foreach (string line in File.ReadAllLines(AssetManager.ResolveFilePath(path))) {
-                string[] array2 = Regex.Split(line, " : ");
+                string[] array2 = line.Split([" : "], StringSplitOptions.None);
 
                 if (array2.Length == 0 || array2[0].Length == 0) { continue; }
 

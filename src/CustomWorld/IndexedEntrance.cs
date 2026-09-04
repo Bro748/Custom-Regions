@@ -20,11 +20,14 @@ namespace CustomRegions.CustomWorld
 
         private static int AbstractRoom_ExitIndex(On.AbstractRoom.orig_ExitIndex orig, AbstractRoom self, int targetRoom)
         {
-            foreach (LoadingIndex index in self.world.GetAbstractRoom(targetRoom)?.AbstractIndexes().Value)
+            if (targetRoom >= 0)
             {
-                if (!index.IsDefault && index.toRoom == self.name)
+                foreach (LoadingIndex index in self.world.GetAbstractRoom(targetRoom)?.AbstractIndexes().Value)
                 {
-                    return index.toRoomIndex;
+                    if (!index.IsDefault && index.toRoom == self.name)
+                    {
+                        return index.toRoomIndex;
+                    }
                 }
             }
             return orig(self, targetRoom);

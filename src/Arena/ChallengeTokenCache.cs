@@ -224,10 +224,10 @@ namespace CustomRegions.Arena
                     if (array2.Length >= 7 && array2[6].StartsWith(tokenind) && array2[6].Length > tokenind.Length)
                     {
                         UnityEngine.Debug.Log(array2[6]);
-                        string[] array3 = Regex.Split(array2[6].Substring(tokenind.Length), ",");
+                        string[] array3 = array2[6].Substring(tokenind.Length).Split(',');
                         for (int k = 0; k < array3.Length; k++)
                         {
-                            string[] array4 = Regex.Split(array3[k], "~");
+                            string[] array4 = array3[k].Split('~');
                             List<SlugcatStats.Name> list = new();
                             string[] array5 = array4[1].Split( '|' );
                             for (int l = 0; l < array5.Length; l++)

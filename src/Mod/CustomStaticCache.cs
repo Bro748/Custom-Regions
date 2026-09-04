@@ -141,7 +141,7 @@ namespace CustomRegions.Mod
                     }
 
                     bool inverted = false;
-                    string[] array = Regex.Split(line, " : ");
+                    string[] array = line.Split([" : "], StringSplitOptions.None);
 
                     if (array.Length < 2) { continue; }
 
@@ -153,7 +153,7 @@ namespace CustomRegions.Mod
                         inverted = true;
                     }
 
-                    string[] array2 = Regex.Split(array[0], ",");
+                    string[] array2 = array[0].Split(',');
 
                     string debug = "";
 

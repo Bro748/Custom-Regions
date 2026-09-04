@@ -33,7 +33,7 @@ namespace CustomRegions.Collectables
 
                 foreach (string str in File.ReadAllLines(customFilePath))
                 {
-                    string[] array = Regex.Split(str, " : ");
+                    string[] array = str.Split([" : "], System.StringSplitOptions.None);
                     string pearlName = array[0];
                     CustomRegionsMod.CustomLog("Pearl name is " + pearlName);
 

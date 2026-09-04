@@ -24,7 +24,7 @@ namespace CustomRegions.Mod
     {
         public const string PLUGIN_ID = "com.rainworldgame.garrakx.crs.mod";
         public const string PLUGIN_NAME = "Custom Regions Support";
-        public const string PLUGIN_VERSION = "0.10.5.9";
+        public const string PLUGIN_VERSION = "0.10.5.10";
         public const string JSON_ID = "crs";
 
          

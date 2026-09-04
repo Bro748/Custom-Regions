@@ -109,14 +109,14 @@ namespace CustomRegions.Arena
             {
                 for (int i = list.Count - 1; i >= 0; i--)
                 {
-                    string[] array = Regex.Split(list[i], "<mpdB>");
+                    string[] array = list[i].Split([ "<mpdB>" ], StringSplitOptions.None);
                     if (array.Length < 2 || array[0].IsNullOrWhiteSpace()) continue;
 
                     switch (array[0])
                     {
                         case "CRSCHALLENGETOKENS":
                             unlockedChallenges.Clear();
-                            unlockedChallenges = Regex.Split(array[1], ",").Select(x => new ChallengeUnlockID(x, false)).ToList();
+                            unlockedChallenges = array[1].Split(',').Select(x => new ChallengeUnlockID(x, false)).ToList();
                             break;
                         case "CRSCHALLENGECOMPLETE":
                             completeChallenges.Clear();

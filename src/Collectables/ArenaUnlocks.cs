@@ -99,7 +99,7 @@ namespace CustomRegions.Collectables
                     // Line empty, skip
                     continue;
                 }
-                string[] lineDivided = Regex.Split(line, " : ");
+                string[] lineDivided = line.Split([" : "], StringSplitOptions.None);
                 MultiplayerUnlocks.LevelUnlockID unlockID;
                 string[] levelNames;
 
@@ -113,7 +113,7 @@ namespace CustomRegions.Collectables
                     {
                         unlockID = new MultiplayerUnlocks.LevelUnlockID(lineDivided[0], true);
                     }
-                    levelNames = Regex.Split(lineDivided[1], ",");
+                    levelNames = lineDivided[1].Split(',');
                 }
                 catch (Exception e)
                 {
@@ -126,7 +126,7 @@ namespace CustomRegions.Collectables
                     if (level.IsNullOrWhiteSpace())
                     { continue; }
 
-                    string[] levelSplit = Regex.Split(level, "-");
+                    string[] levelSplit = level.Split('-');
                     string levelFile = levelSplit[0].Trim();
                     string levelName = levelSplit.Length >= 2 ? levelSplit[1].Trim() : levelFile;
                     levelFile = levelFile.ToLower();

@@ -95,9 +95,9 @@ namespace CustomRegions.CustomWorld
                 {
                     for (i = 0; i < StaticWorld.preBakedPathingCreatures.Length; i++)
                     {
-                        string[] array2 = Regex.Split(s, "<<DIV - A>>");
-                        int[] intArray = RoomPreprocessor.StringToIntArray(Regex.Split(array2[i + 1], "<<DIV - B>>")[0]);
-                        float[] floatArray = RoomPreprocessor.StringToFloatArray(Regex.Split(array2[i + 1], "<<DIV - B>>")[1]);
+                        string[] array2 = s.Split(["<<DIV - A>>"], System.StringSplitOptions.None);
+                        int[] intArray = RoomPreprocessor.StringToIntArray(array2[i + 1].Split(["<<DIV - B>>"], System.StringSplitOptions.None)[0]);
+                        float[] floatArray = RoomPreprocessor.StringToFloatArray(array2[i + 1].Split(["<<DIV - B>>"], System.StringSplitOptions.None)[1]);
                     }
                 }
                 catch { CustomRegionsMod.CustomLog($"Error parsing map for creature [{StaticWorld.preBakedPathingCreatures[i].name}]"); }

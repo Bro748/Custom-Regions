@@ -99,7 +99,7 @@ namespace CustomRegions.RegionProperties
                         case nameof(cloudDirection): cloudDirection = float.Parse(value); break;
 
                         case nameof(watcherSentientRotRooms):
-                            watcherSentientRotRooms = Regex.Split(value.Trim(), ", ").ToList();
+                            watcherSentientRotRooms = value.Trim().Split([", "], StringSplitOptions.None).ToList();
                             _ = WatcherRoomSpecificScript.sentientRotVanillaRooms;
                             string[] toAdd = watcherSentientRotRooms.Except(WatcherRoomSpecificScript.sentientRotVanillaRooms).ToArray();
                             if (toAdd.Length > 0)
@@ -140,7 +140,7 @@ namespace CustomRegions.RegionProperties
                 string[] array = s.Split(',').Select(x => x.Trim()).ToArray();
                 foreach (string str in array)
                 {
-                    string[] array2 = Regex.Split(str, "-");
+                    string[] array2 = str.Split('-');
                     result[array2[0]] = Utils.ParseColor(array2[1]);
                 }
 
@@ -154,7 +154,7 @@ namespace CustomRegions.RegionProperties
                 string[] array = s.Split(',').Select(x => x.Trim()).ToArray();
                 foreach (string str in array)
                 {
-                    string[] array2 = Regex.Split(str, "-");
+                    string[] array2 = str.Split('-');
                     AbstractPhysicalObject.AbstractObjectType type = new(array2[0]);
                     result[type] = float.Parse(array2[1]);
                 }
@@ -289,7 +289,7 @@ namespace CustomRegions.RegionProperties
                 {
                     if (line.IsNullOrWhiteSpace()) continue;
 
-                    string[] array = Regex.Split(line, ": ");
+                    string[] array = line.Split([": "], StringSplitOptions.None);
                     p.RegisterProperty(array);
                 }
 
@@ -350,7 +350,7 @@ namespace CustomRegions.RegionProperties
                 return null;
             }
 
-            string[] array2 = Regex.Split(parentName, "-");
+            string[] array2 = parentName.Split('-');
             SlugcatStats.Timeline parentSlug = array2.Length >= 2 ? new(array2[1]) : null;
             CustomRegionsMod.CustomLog($"region [{self.name}] is loading parent [{array2[0]}] for slug [{parentSlug}]");
             Region parent = new(array2[0], 0, RegionParentID, game, parentSlug);

@@ -213,7 +213,7 @@ namespace CustomRegions.Mod
             {
                 //CustomWorldMod.Log($"Rebuilding WorldData from line [{this}]", false, CustomWorldMod.DebugLevel.FULL);
                 WorldDataLine updatedLine = this;
-                string[] split = System.Text.RegularExpressions.Regex.Split(line, " : ");
+                string[] split = line.Split([" : "], StringSplitOptions.None);
                 string roomName = string.Empty;
                 string connections = string.Empty;
                 string endingString = string.Empty;
@@ -307,12 +307,12 @@ namespace CustomRegions.Mod
 
                 if (!line.Contains(" : "))
                  return false;
-                string[] array = Regex.Split(line, " : ");
+                string[] array = line.Split([" : "], StringSplitOptions.None);
                 if (array.Length < 2)
                  return false;
 
                 result.room = array[0];
-                result.connections = Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(array[1], ","), ", ").ToList();
+                result.connections = RWCustom.Custom.ValidateSpacedDelimiter(array[1], ",").Split([", "], StringSplitOptions.None).ToList();
 
                 if (array.Length > 2)
                 {
@@ -372,7 +372,7 @@ namespace CustomRegions.Mod
                 if (!line.Contains("-"))
                     return false;
 
-                string[] array = Regex.Split(line, "-");
+                string[] array = line.Split('-');
                 if (array.Length < 2 || int.TryParse(array[0], out result.den))
                     return false;
 
@@ -438,7 +438,7 @@ namespace CustomRegions.Mod
                 if (!line.Contains("-"))
                     return false;
 
-                string[] array = Regex.Split(line, "-");
+                string[] array = line.Split('-');
                 if (array.Length < 2)
                     return false;
 
@@ -496,7 +496,7 @@ namespace CustomRegions.Mod
                 if (!line.Contains(" : "))
                     return false;
 
-                string[] array = Regex.Split(line, " : ");
+                string[] array = line.Split([" : "], StringSplitOptions.None);
                 if (array.Length < 2)
                     return false;
 
@@ -510,7 +510,7 @@ namespace CustomRegions.Mod
 
                     result.lineage = true;
 
-                    string[] array3 = Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(array[3], ","), ", ");
+                    string[] array3 = RWCustom.Custom.ValidateSpacedDelimiter(array[3], ",").Split([", "], StringSplitOptions.None);
                     foreach (string str in array3)
                     {
                         if (Lineage.TryParse(str, out Lineage lineage))
@@ -521,7 +521,7 @@ namespace CustomRegions.Mod
 
                 result.room = array[0];
 
-                string[] array2 = Regex.Split(RWCustom.Custom.ValidateSpacedDelimiter(array[1], ","), ", ");
+                string[] array2 = RWCustom.Custom.ValidateSpacedDelimiter(array[1], ",").Split([", "], StringSplitOptions.None);
                 foreach (string str in array2)
                 {
                     if (LoneCreature.TryParse(str, out LoneCreature loneCreature))
@@ -627,22 +627,22 @@ namespace CustomRegions.Mod
             
             public static bool TryParse(string str, out CustomChallenge result)
             {
-                string[] array = Regex.Split(str, " : ");
+                string[] array = str.Split([" : "], StringSplitOptions.None);
                 try
                 {
                     result = new CustomChallenge()
                     {
                         id = new(array[0], false),
                         color = RWCustom.Custom.hexToColor(array[1]),
-                        levels = Regex.Split(array[2], ", "),
+                        levels = array[2].Split([", "], StringSplitOptions.None),
                         unlocked = array.Length >= 4 && array[3] == "UNLOCKED",
                         UnlockRequirement = new()
                     };
 
-                    string[] levels = Regex.Split(array[2], ", ");
+                    string[] levels = array[2].Split([", "], StringSplitOptions.None);
                     for (int i = 0; i < levels.Length; i++)
                     {
-                        string[] arr = Regex.Split(levels[i], "-{");
+                        string[] arr = levels[i].Split(["-{"], StringSplitOptions.None);
                         levels[i] = arr[0];
 
                         if (arr.Length >= 2 && arr[1].EndsWith("}"))

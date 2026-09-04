@@ -274,7 +274,7 @@ namespace CustomRegions.CustomWorld
                 // Check if current room is connected to any other room
                 if (otherConnectedLines.Count == 0) {
 
-                    currentConnections = Regex.Split(currentLine.connections, ", ").ToList();
+                    currentConnections = currentLine.connections.Split([", "], System.StringSplitOptions.None).ToList();
                     if (currentConnections.FindAll(x => x.Contains("DISCONNECTED")).Count == currentConnections.Count) {
                         // room is disconnected from everything
                     } else {
@@ -468,7 +468,7 @@ namespace CustomRegions.CustomWorld
                 CustomRegionsMod.CustomLog($"\nThere are probably missing connections in the world file. Analysis returned:");
                 foreach (var item in brokenLines) {
                     CustomRegionsMod.CustomLog($"Room: [{item.roomName}]. Connections: [{item.connections}] " +
-                        $"may need to be replaced with -> [{Regex.Split(fixedLines.Find(x => x.roomName.Equals(item.roomName)).line, " : ")[1]}]");
+                        $"may need to be replaced with -> [{fixedLines.Find(x => x.roomName.Equals(item.roomName)).line.Split([" : "], System.StringSplitOptions.None)[1]}]");
                 }
                 CustomRegionsMod.CustomLog($"Found broken connections in world file! Read {CustomRegionsMod.logFileName} for more information", true);
             }
@@ -484,7 +484,7 @@ namespace CustomRegions.CustomWorld
             // CustomWorldMod.CustomWorldLog($"Custom Regions: Trying to split [{oldConnections}]");
             List<string> connections = new List<string>();
 
-            string[] split = Regex.Split(oldConnections, " : ");
+            string[] split = oldConnections.Split([" : "], System.StringSplitOptions.None);
             int position = 0;
 
             if (split.Length >= 2) {
@@ -492,7 +492,7 @@ namespace CustomRegions.CustomWorld
                 position = 1;
             }
 
-            string[] split_rooms = Regex.Split(split[position], ", ");
+            string[] split_rooms = split[position].Split([", "], System.StringSplitOptions.None);
 
             foreach (string s in split_rooms) {
                 if (s.Trim() != "") {
@@ -575,7 +575,7 @@ namespace CustomRegions.CustomWorld
                     }
                     if (startRooms) {
                         // Pre-processing
-                        string[] split = Regex.Split(s, " : ");
+                        string[] split = s.Split([" : "], System.StringSplitOptions.None);
                         string roomName = string.Empty;
                         string connections = string.Empty;
                         string endingString = string.Empty;
@@ -609,7 +609,7 @@ namespace CustomRegions.CustomWorld
                     }
                     if (startCreatures) {
                         // Pre-processing
-                        string[] split = Regex.Split(s, " : ");
+                        string[] split = s.Split([" : "], System.StringSplitOptions.None);
                         string roomName = string.Empty;
                         string spawns = string.Empty;
                         bool lineage = false;

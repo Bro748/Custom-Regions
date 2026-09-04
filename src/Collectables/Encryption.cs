@@ -114,7 +114,7 @@ namespace CustomRegions.Collectables
             }
             else 
             {
-                string[] array = Regex.Split(fileText, "\r\n");
+                string[] array = fileText.Split(["\r\n"], StringSplitOptions.None);
                 if (array.Length > 0 && array[0].Length > 0 && array[0].Substring(1).ToLower() == $"-{Path.GetFileNameWithoutExtension(path).ToLower()}")
                 {
                     return fileText;

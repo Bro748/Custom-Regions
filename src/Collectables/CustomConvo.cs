@@ -121,7 +121,7 @@ namespace CustomRegions.Collectables
 
             CustomRegionsMod.CustomLog(fileText, false, CustomRegionsMod.DebugLevel.FULL);
 
-            string[] array = Regex.Split(fileText, "\r\n");
+            string[] array = fileText.Split(["\r\n"], System.StringSplitOptions.None);
             ParseConvoText(self, array, oneRandomLine, randomSeed);
         }
 

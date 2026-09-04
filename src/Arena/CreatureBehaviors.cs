@@ -55,7 +55,7 @@ namespace CustomRegions.Arena
             {
                 if (line.Length > 2 && line.Substring(0, 2) != "//")
                 {
-                    string[] array2 = Regex.Split(line, " - ");
+                    string[] array2 = line.Split([" - "],StringSplitOptions.None);
                     if (array2[0].Length >= 2 && array2[0] == "GarbageWorms" && int.TryParse(array2[1], out var result))
                     { wormsToSpawn = result; break; }
                 }
