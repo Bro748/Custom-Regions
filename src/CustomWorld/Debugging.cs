@@ -1,4 +1,5 @@
 ﻿using CustomRegions.Mod;
+using DevInterface;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Diagnostics;
@@ -34,6 +35,34 @@ namespace CustomRegions.CustomWorld
             On.AIdataPreprocessor.CreatureDone += AIdataPreprocessor_CreatureDone;
             On.ModManager.ModMerger.WorldRoomSpawn.ctor += WorldRoomSpawn_ctor;
             On.ModManager.ModMerger.WorldDen.ctor += WorldDen_ctor;
+            On.Room.LocalCoordinateOfNode += Room_LocalCoordinateOfNode;
+            On.DevInterface.MapObject.RoomRepresentation.CreateMapTexture += RoomRepresentation_CreateMapTexture;
+        }
+
+        private static WorldCoordinate Room_LocalCoordinateOfNode(On.Room.orig_LocalCoordinateOfNode orig, Room self, int node)
+        {
+            try
+            {
+                return orig(self, node);
+            }
+            catch
+            {
+                CustomRegionsMod.CustomLog("Broken room node: " + self.abstractRoom.name + " node " + node);
+                throw;
+            }
+        }
+
+        private static void RoomRepresentation_CreateMapTexture(On.DevInterface.MapObject.RoomRepresentation.orig_CreateMapTexture orig, MapObject.RoomRepresentation self, Room useRoom)
+        {
+            try
+            {
+                orig(self, useRoom);
+            }
+            catch
+            {
+                CustomRegionsMod.CustomLog("Failed to create map texture for " + useRoom.abstractRoom.name);
+                throw;
+            }
         }
 
         private static void WorldDen_ctor(On.ModManager.ModMerger.WorldDen.orig_ctor orig, ModManager.ModMerger.WorldDen self, string denString)
