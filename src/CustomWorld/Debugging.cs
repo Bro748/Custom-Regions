@@ -1,4 +1,5 @@
 ﻿using CustomRegions.Mod;
+using DevInterface;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Diagnostics;
@@ -34,18 +35,46 @@ namespace CustomRegions.CustomWorld
             On.AIdataPreprocessor.CreatureDone += AIdataPreprocessor_CreatureDone;
             On.ModManager.ModMerger.WorldRoomSpawn.ctor += WorldRoomSpawn_ctor;
             On.ModManager.ModMerger.WorldDen.ctor += WorldDen_ctor;
+            On.Room.LocalCoordinateOfNode += Room_LocalCoordinateOfNode;
+            On.DevInterface.MapObject.RoomRepresentation.CreateMapTexture += RoomRepresentation_CreateMapTexture;
+        }
+
+        private static WorldCoordinate Room_LocalCoordinateOfNode(On.Room.orig_LocalCoordinateOfNode orig, Room self, int node)
+        {
+            try
+            {
+                return orig(self, node);
+            }
+            catch
+            {
+                CustomRegionsMod.CustomLog("Broken room node: " + self.abstractRoom.name + " node " + node);
+                throw;
+            }
+        }
+
+        private static void RoomRepresentation_CreateMapTexture(On.DevInterface.MapObject.RoomRepresentation.orig_CreateMapTexture orig, MapObject.RoomRepresentation self, Room useRoom)
+        {
+            try
+            {
+                orig(self, useRoom);
+            }
+            catch
+            {
+                CustomRegionsMod.CustomLog("Failed to create map texture for " + useRoom.abstractRoom.name);
+                throw;
+            }
         }
 
         private static void WorldDen_ctor(On.ModManager.ModMerger.WorldDen.orig_ctor orig, ModManager.ModMerger.WorldDen self, string denString)
         {
             try { orig(self, denString); }
-            catch (Exception e) { CustomRegionsMod.CustomLog($"broken WorldDen: [{denString}]"); throw e; }
+            catch { CustomRegionsMod.CustomLog($"broken WorldDen: [{denString}]"); throw; }
         }
 
         private static void WorldRoomSpawn_ctor(On.ModManager.ModMerger.WorldRoomSpawn.orig_ctor orig, ModManager.ModMerger.WorldRoomSpawn self, string character, string line, bool excludeMode)
         {
             try { orig(self, character, line, excludeMode); }
-            catch(Exception e) { CustomRegionsMod.CustomLog($"broken room line: [{line}]"); throw e; }
+            catch { CustomRegionsMod.CustomLog($"broken room line: [{line}]"); throw; }
         }
 
         private static void AIdataPreprocessor_CreatureDone(On.AIdataPreprocessor.orig_CreatureDone orig, AIdataPreprocessor self)
@@ -102,7 +131,7 @@ namespace CustomRegions.CustomWorld
                 }
                 catch { CustomRegionsMod.CustomLog($"Error parsing map for creature [{StaticWorld.preBakedPathingCreatures[i].name}]"); }
                 CustomRegionsMod.CustomLog(e.ToString());
-                throw e;
+                throw;
             }
         }
 
